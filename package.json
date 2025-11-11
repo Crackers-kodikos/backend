@@ -1,0 +1,55 @@
+{
+  "name": "back-end",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx --watch --env-file .env app.ts",
+    "start": "node --env-file .env dist/index.js",
+    "drizzle:generate": "drizzle-kit generate ",
+    "drizzle:migrate": "drizzle-kit migrate ",
+    "drizzle:push": "drizzle-kit push ",
+    "drizzle:pull": "drizzle-kit pull ",
+    "drizzle:seed": "node db/seeds/index.js",
+    "drizzle:seed:mock": "node db/seeds/seedMockData.js",
+    "drizzle:clearseed": "node ./db/seeds/clearSeeds.js",
+    "drizzle:studio": "npx drizzle-kit studio --port 3000 --verbose",
+    "test": "npx nodemon playground.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Crackers-kodikos/back-end.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Crackers-kodikos/back-end/issues"
+  },
+  "homepage": "https://github.com/Crackers-kodikos/back-end#readme",
+  "description": "",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.41.0",
+    "drizzle-seed": "^0.3.1",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.3",
+    "serveonet": "^0.0.2"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.7",
+    "drizzle-kit": "^0.30.4",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3"
+  }
+}

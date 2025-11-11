@@ -1,0 +1,12 @@
+{
+  "watch": ["./src", "./", "./routes"],
+  "ext": "ts,js,json",
+  "ignore": [
+    "node_modules/**/*",
+    "dist/**/*",
+    "*.tmp",
+    "*.log",
+    "C:\\DumpStack.log.tmp"
+  ],
+  "exec": "tsx"
+}
