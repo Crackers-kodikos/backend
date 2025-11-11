@@ -21,7 +21,7 @@ app.use(cookieParser());
 app.use(authRouter);
 app.use(errorHandler);
 app.get("/", async (req, res) => {
-  res.send("server is running");
+  res.send("server is running nosssw");
 });
 
 app.listen(port, "0.0.0.0", async () => {

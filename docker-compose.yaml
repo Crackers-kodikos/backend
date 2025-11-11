@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  server:
+    build: .
+    container_name: kodikos-api-express
+    ports:
+      - 3232:3232
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    environment:
+    -  PORT=3232
+    - DATABASE_URL="postgresql://postgres:lenovo@localhost:5432/kodikos"
+    - BCRYPT_SALT_ROUNDS=5
+    - JWT_SECRET="your-secret-key"
+    - JWT_EXPIRES_IN="30d"
+    - ALLOWED_ORIGINS="http://localhost:8081"
+    - SECURE=false
+
+    restart: always
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    container_name: kodikos-db-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: kodikosdb
+    ports:
+      - 5432:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data: 
