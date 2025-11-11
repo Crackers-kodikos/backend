@@ -12,10 +12,7 @@ COPY . .
 
 EXPOSE 3232
 
-CMD ["npm", "run", "drizzle:push"]
-
-CMD ["npm", "run", "drizzle:seed"]
-
-CMD ["npm", "run", "drizzle:studio"]
+RUN npm run drizzle:push 
+# && \ npm run drizzle:seed
 
 CMD ["npm", "run", "dev"]
