@@ -9,7 +9,7 @@ import {
   getTailorWorkload,
   reviewCompletedItem,
   getValidatorStatistics
-} from '../controllers/validator/validatorController.js';
+} from '../controllers/validatorController.js';
 import { authenticateToken, isValidator } from '../middleware/authMiddlewares.js';
 
 const router = express.Router();

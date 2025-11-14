@@ -2,6 +2,7 @@
   "name": "back-end",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "tsx --watch --env-file .env app.ts",
@@ -30,6 +31,7 @@
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
     "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
@@ -40,7 +42,8 @@
     "pg": "^8.13.3",
     "serveonet": "^0.0.2",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.9",

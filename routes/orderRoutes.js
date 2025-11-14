@@ -7,7 +7,7 @@ import {
   updateOrderStatus,
   getOrderStatistics,
   getOrderTimeline
-} from '../controllers/order/orderController.js';
+} from '../controllers/orderController.js';
 import { authenticateToken, isValidator } from '../middleware/authMiddlewares.js';
 
 const router = express.Router();

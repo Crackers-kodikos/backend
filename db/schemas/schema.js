@@ -67,6 +67,26 @@ export const workshops = pgTable('workshops', {
   }).onDelete('restrict'),
 ]);
 
+export const subscriptions = pgTable('subscriptions', {
+  id: serial().primaryKey().notNull(),
+  workshopId: serial('workshop_id').notNull(),
+  planType: varchar('plan_type', { length: 50 }).notNull(),
+  status: varchar('status', { length: 50 }).default('active').notNull(),
+  startDate: timestamp('start_date').defaultNow().notNull(),
+  endDate: timestamp('end_date').notNull(),
+  renewalDate: timestamp('renewal_date').notNull(),
+  paymentStatus: varchar('payment_status', { length: 50 }).default('pending').notNull(),
+  transactionId: varchar('transaction_id', { length: 255 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.workshopId],
+    foreignColumns: [workshops.id],
+    name: "subscriptions_workshop_id_fk"
+  }).onDelete('cascade'),
+]);
+
 export const magazines = pgTable('magazines', {
   id: serial().primaryKey().notNull(),
   ownerUserId: serial('owner_user_id').notNull(),
@@ -402,3 +422,10 @@ export const validatorAssignmentLogRelations = relations(validatorAssignmentLog,
 export const subscriptionPlanRelations = relations(subscriptionPlans, ({ many }) => ({
   workshops: many(workshops),
 }));
+export const subscriptionRelations = relations(subscriptions, ({ one }) => ({
+  workshop: one(workshops, {
+    fields: [subscriptions.workshopId],
+    references: [workshops.id],
+  }),
+}));
+

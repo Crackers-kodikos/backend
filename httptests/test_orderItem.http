@@ -1,0 +1,519 @@
+### ========================================
+### ORDER ITEM MANAGEMENT - HTTP TESTS
+### ========================================
+### Complete Order Item Lifecycle Testing
+### Base URL: http://localhost:3232
+### ========================================
+
+@baseUrl = http://localhost:3232
+@token = 
+@orderId = 1
+@itemId = 1
+@tailorId = 1
+
+### ========================================
+### PHASE 0: SETUP - Create Test Data
+### ========================================
+
+### SETUP-1: Create Complete Test Environment
+# Register workshop, validator, tailor, magazine
+# Create order with items (assuming this exists from previous tests)
+# We'll use existing data, but test needs:
+# @token - any authenticated user token
+# @orderId - from created order
+# @itemId - from created order items
+# @tailorId - assigned tailor ID
+
+### NOTE: Run with token from previous test phases
+### Set @token, @orderId, @itemId, @tailorId from previous responses
+
+### ========================================
+### PHASE 1: RETRIEVE ALL ITEMS - 4 Tests
+### ========================================
+
+### 1.1 - Get All Order Items
+GET {{baseUrl}}/api/order-items
+Authorization: Bearer {{token}}
+
+### 1.2 - Get Items by Status (PENDING)
+GET {{baseUrl}}/api/order-items?status=PENDING
+Authorization: Bearer {{token}}
+
+### 1.3 - Get Items by Status (ASSIGNED)
+GET {{baseUrl}}/api/order-items?status=ASSIGNED
+Authorization: Bearer {{token}}
+
+### 1.4 - Get Items by Order ID
+GET {{baseUrl}}/api/order-items?orderId={{orderId}}
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 2: GET SPECIFIC ITEM DETAILS - 5 Tests
+### ========================================
+
+### 2.1 - Get Single Item Details
+GET {{baseUrl}}/api/order-items/{{itemId}}
+Authorization: Bearer {{token}}
+
+### 2.2 - Get Item with Full Context
+GET {{baseUrl}}/api/order-items/{{itemId}}
+Authorization: Bearer {{token}}
+
+### 2.3 - Try Non-Existent Item (Error)
+GET {{baseUrl}}/api/order-items/99999
+Authorization: Bearer {{token}}
+
+### 2.4 - Get Another Item if Multiple Exist
+GET {{baseUrl}}/api/order-items/<another_itemId>
+Authorization: Bearer {{token}}
+
+### 2.5 - Verify Item Contains Order Reference
+GET {{baseUrl}}/api/order-items/{{itemId}}
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 3: GET ITEMS BY ORDER - 4 Tests
+### ========================================
+
+### 3.1 - Get All Items in Order
+GET {{baseUrl}}/api/order-items/order/{{orderId}}
+Authorization: Bearer {{token}}
+
+### 3.2 - Verify Stats Calculated Correctly
+GET {{baseUrl}}/api/order-items/order/{{orderId}}
+Authorization: Bearer {{token}}
+
+### 3.3 - Get Items from Different Order (if exists)
+GET {{baseUrl}}/api/order-items/order/<other_orderId>
+Authorization: Bearer {{token}}
+
+### 3.4 - Try Non-Existent Order (Error)
+GET {{baseUrl}}/api/order-items/order/99999
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 4: GET ITEMS BY TAILOR - 4 Tests
+### ========================================
+
+### 4.1 - Get All Items for Tailor
+GET {{baseUrl}}/api/order-items/tailor/{{tailorId}}
+Authorization: Bearer {{token}}
+
+### 4.2 - Verify Item Count for Tailor
+GET {{baseUrl}}/api/order-items/tailor/{{tailorId}}
+Authorization: Bearer {{token}}
+
+### 4.3 - Get Items from Different Tailor (if exists)
+GET {{baseUrl}}/api/order-items/tailor/<other_tailorId>
+Authorization: Bearer {{token}}
+
+### 4.4 - Try Non-Existent Tailor (Error)
+GET {{baseUrl}}/api/order-items/tailor/99999
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 5: UPDATE SINGLE ITEM STATUS - 6 Tests
+### ========================================
+
+### 5.1 - Update Item to IN_PROGRESS
+PUT {{baseUrl}}/api/order-items/{{itemId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newStatus": "IN_PROGRESS"
+}
+
+### 5.2 - Verify Status Changed
+GET {{baseUrl}}/api/order-items/{{itemId}}
+Authorization: Bearer {{token}}
+
+### 5.3 - Update Item to COMPLETED
+PUT {{baseUrl}}/api/order-items/{{itemId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newStatus": "COMPLETED",
+  "completionDate": "2025-11-14T22:00:00Z"
+}
+
+### 5.4 - Verify Completion Date Set
+GET {{baseUrl}}/api/order-items/{{itemId}}
+Authorization: Bearer {{token}}
+
+### 5.5 - Update Item to APPROVED
+PUT {{baseUrl}}/api/order-items/{{itemId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newStatus": "APPROVED"
+}
+
+### 5.6 - Verify Final Status
+GET {{baseUrl}}/api/order-items/{{itemId}}
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 6: BATCH UPDATE ITEMS - 5 Tests
+### ========================================
+
+### 6.1 - Get Multiple Item IDs First
+GET {{baseUrl}}/api/order-items/order/{{orderId}}
+Authorization: Bearer {{token}}
+
+### 6.2 - Batch Update Multiple Items to IN_PROGRESS
+PUT {{baseUrl}}/api/order-items/batch/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "itemIds": [{{itemId}}, <item2_id>, <item3_id>],
+  "newStatus": "IN_PROGRESS"
+}
+
+### 6.3 - Verify Batch Update Applied
+GET {{baseUrl}}/api/order-items/order/{{orderId}}
+Authorization: Bearer {{token}}
+
+### 6.4 - Batch Update to COMPLETED
+PUT {{baseUrl}}/api/order-items/batch/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "itemIds": [<item2_id>, <item3_id>],
+  "newStatus": "COMPLETED"
+}
+
+### 6.5 - Verify All Updates Applied
+GET {{baseUrl}}/api/order-items/order/{{orderId}}
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 7: ASSIGNMENT DETAILS - 4 Tests
+### ========================================
+
+### 7.1 - Get Item Assignment Details
+GET {{baseUrl}}/api/order-items/{{itemId}}/assignment
+Authorization: Bearer {{token}}
+
+### 7.2 - Verify Tailor Information
+GET {{baseUrl}}/api/order-items/{{itemId}}/assignment
+Authorization: Bearer {{token}}
+
+### 7.3 - Verify Validator Information
+GET {{baseUrl}}/api/order-items/{{itemId}}/assignment
+Authorization: Bearer {{token}}
+
+### 7.4 - Get Assignment for Non-Assigned Item (if exists)
+GET {{baseUrl}}/api/order-items/<unassigned_itemId>/assignment
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 8: ORDER STATISTICS - 4 Tests
+### ========================================
+
+### 8.1 - Get Order Item Statistics (Before Updates)
+# Run this after initial setup
+GET {{baseUrl}}/api/order-items/order/{{orderId}}/statistics
+Authorization: Bearer {{token}}
+
+### 8.2 - Check Status Breakdown
+GET {{baseUrl}}/api/order-items/order/{{orderId}}/statistics
+Authorization: Bearer {{token}}
+
+### 8.3 - Verify Estimated Hours Calculated
+GET {{baseUrl}}/api/order-items/order/{{orderId}}/statistics
+Authorization: Bearer {{token}}
+
+### 8.4 - Check Completion Percentage
+GET {{baseUrl}}/api/order-items/order/{{orderId}}/statistics
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 9: GLOBAL STATISTICS - 3 Tests
+### ========================================
+
+### 9.1 - Get Global Item Statistics
+GET {{baseUrl}}/api/order-items/statistics/global
+Authorization: Bearer {{token}}
+
+### 9.2 - Verify Global Status Breakdown
+GET {{baseUrl}}/api/order-items/statistics/global
+Authorization: Bearer {{token}}
+
+### 9.3 - Check Average Estimated Hours
+GET {{baseUrl}}/api/order-items/statistics/global
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 10: FILTERING - 6 Tests
+### ========================================
+
+### 10.1 - Filter Items by Order and Status
+GET {{baseUrl}}/api/order-items?orderId={{orderId}}&status=IN_PROGRESS
+Authorization: Bearer {{token}}
+
+### 10.2 - Filter Items by Tailor Only
+GET {{baseUrl}}/api/order-items?tailorId={{tailorId}}
+Authorization: Bearer {{token}}
+
+### 10.3 - Filter Completed Items
+GET {{baseUrl}}/api/order-items?status=COMPLETED
+Authorization: Bearer {{token}}
+
+### 10.4 - Filter Approved Items
+GET {{baseUrl}}/api/order-items?status=APPROVED
+Authorization: Bearer {{token}}
+
+### 10.5 - Filter Items Needing Revision
+GET {{baseUrl}}/api/order-items?status=REVISION_NEEDED
+Authorization: Bearer {{token}}
+
+### 10.6 - Filter Assigned Items
+GET {{baseUrl}}/api/order-items?status=ASSIGNED
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 11: COMPLEX QUERIES - 5 Tests
+### ========================================
+
+### 11.1 - Get Pending Items for Specific Order
+GET {{baseUrl}}/api/order-items?orderId={{orderId}}&status=PENDING
+Authorization: Bearer {{token}}
+
+### 11.2 - Get Completed Items for Specific Tailor
+GET {{baseUrl}}/api/order-items?tailorId={{tailorId}}&status=COMPLETED
+Authorization: Bearer {{token}}
+
+### 11.3 - Get In-Progress Items
+GET {{baseUrl}}/api/order-items?status=IN_PROGRESS
+Authorization: Bearer {{token}}
+
+### 11.4 - Get Items Awaiting Approval
+GET {{baseUrl}}/api/order-items?status=COMPLETED
+Authorization: Bearer {{token}}
+
+### 11.5 - Get Items with Revision Issues
+GET {{baseUrl}}/api/order-items?status=REVISION_NEEDED
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 12: ERROR HANDLING - 8 Tests
+### ========================================
+
+### E1 - Missing Authorization
+GET {{baseUrl}}/api/order-items/{{itemId}}
+
+### E2 - Invalid Token
+GET {{baseUrl}}/api/order-items/{{itemId}}
+Authorization: Bearer invalid_token_xyz
+
+### E3 - Update with Invalid Status
+PUT {{baseUrl}}/api/order-items/{{itemId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newStatus": "INVALID_STATUS"
+}
+
+### E4 - Update Non-Existent Item
+PUT {{baseUrl}}/api/order-items/99999/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newStatus": "COMPLETED"
+}
+
+### E5 - Batch Update with Empty Array
+PUT {{baseUrl}}/api/order-items/batch/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "itemIds": [],
+  "newStatus": "IN_PROGRESS"
+}
+
+### E6 - Batch Update Missing Status
+PUT {{baseUrl}}/api/order-items/batch/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "itemIds": [{{itemId}}]
+}
+
+### E7 - Get Item Assignment for Non-Existent Item
+GET {{baseUrl}}/api/order-items/99999/assignment
+Authorization: Bearer {{token}}
+
+### E8 - Get Statistics for Non-Existent Order
+GET {{baseUrl}}/api/order-items/order/99999/statistics
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 13: WORKFLOW TRANSITIONS - 6 Tests
+### ========================================
+
+### 13.1 - PENDING → ASSIGNED
+PUT {{baseUrl}}/api/order-items/{{itemId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newStatus": "ASSIGNED"
+}
+
+### 13.2 - ASSIGNED → IN_PROGRESS
+PUT {{baseUrl}}/api/order-items/{{itemId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newStatus": "IN_PROGRESS"
+}
+
+### 13.3 - IN_PROGRESS → COMPLETED
+PUT {{baseUrl}}/api/order-items/{{itemId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newStatus": "COMPLETED",
+  "completionDate": "2025-11-14T23:00:00Z"
+}
+
+### 13.4 - COMPLETED → APPROVED
+PUT {{baseUrl}}/api/order-items/{{itemId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newStatus": "APPROVED"
+}
+
+### 13.5 - COMPLETED → REVISION_NEEDED (for another item)
+PUT {{baseUrl}}/api/order-items/<item2_id>/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newStatus": "REVISION_NEEDED"
+}
+
+### 13.6 - Final Status Check
+GET {{baseUrl}}/api/order-items/order/{{orderId}}
+Authorization: Bearer {{token}}
+
+### ========================================
+### PHASE 14: PERFORMANCE & AGGREGATION - 5 Tests
+### ========================================
+
+### 14.1 - Get All Items with Pagination
+GET {{baseUrl}}/api/order-items
+Authorization: Bearer {{token}}
+
+### 14.2 - Get Order with All Statistics
+GET {{baseUrl}}/api/order-items/order/{{orderId}}/statistics
+Authorization: Bearer {{token}}
+
+### 14.3 - Get Tailor Workload
+GET {{baseUrl}}/api/order-items/tailor/{{tailorId}}
+Authorization: Bearer {{token}}
+
+### 14.4 - Get Global System Statistics
+GET {{baseUrl}}/api/order-items/statistics/global
+Authorization: Bearer {{token}}
+
+### 14.5 - Final Verification - All Items
+GET {{baseUrl}}/api/order-items/order/{{orderId}}
+Authorization: Bearer {{token}}
+
+### ========================================
+### EXECUTION GUIDE
+### ========================================
+###
+### QUICK TEST (5 min):
+### Run Phases 1-3 (13 tests)
+### Basic retrieval and listing
+###
+### STANDARD TEST (10 min):
+### Run Phases 1-8 (30 tests)
+### Full features including stats
+###
+### COMPREHENSIVE TEST (20 min):
+### Run all Phases 1-14 (60+ tests)
+### Complete workflow with errors
+###
+### ========================================
+### PHASE SUMMARY
+### ========================================
+###
+### Phase 1: Retrieve All Items (4 tests)
+### Phase 2: Get Item Details (5 tests)
+### Phase 3: Get Items by Order (4 tests)
+### Phase 4: Get Items by Tailor (4 tests)
+### Phase 5: Update Single Item (6 tests)
+### Phase 6: Batch Updates (5 tests)
+### Phase 7: Assignment Details (4 tests)
+### Phase 8: Order Statistics (4 tests)
+### Phase 9: Global Statistics (3 tests)
+### Phase 10: Filtering (6 tests)
+### Phase 11: Complex Queries (5 tests)
+### Phase 12: Error Handling (8 tests)
+### Phase 13: Workflow Transitions (6 tests)
+### Phase 14: Performance (5 tests)
+###
+### TOTAL: 65+ comprehensive tests ✅
+###
+### ========================================
+### KEY VARIABLES
+### ========================================
+###
+### @token = Authentication token
+### @orderId = Order ID from created order
+### @itemId = Item ID from order items
+### @tailorId = Assigned tailor ID
+###
+### ========================================
+### STATUS VALUES
+### ========================================
+###
+### PENDING - Awaiting assignment
+### ASSIGNED - Assigned to tailor
+### IN_PROGRESS - Tailor working
+### COMPLETED - Tailor finished
+### REVISION_NEEDED - Quality review failed
+### APPROVED - Quality approved
+###
+### ========================================
+### EXPECTED FLOWS
+### ========================================
+###
+### Flow 1 (Approved):
+### PENDING → ASSIGNED → IN_PROGRESS → COMPLETED → APPROVED
+###
+### Flow 2 (Revision):
+### PENDING → ASSIGNED → IN_PROGRESS → COMPLETED → REVISION_NEEDED
+###
+### ========================================
+### STATISTICS TRACKED
+### ========================================
+###
+### Per Order:
+### • Total items
+### • Items by status
+### • Estimated hours total
+### • Completion percentage
+###
+### Global:
+### • Total items system-wide
+### • System-wide status breakdown
+### • Average estimated hours
+###
+### ========================================

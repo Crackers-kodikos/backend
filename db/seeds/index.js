@@ -1,20 +1,29 @@
-import bcrypt from "bcrypt";
-import dotenv from "dotenv";
-import db from "../index.js";
-import * as schema from "../schemas/schema.js";
-import { config } from "../../config/env.js"
+#!/usr/bin/env node
 
+/**
+ * Database Seed Runner
+ * Run this script to populate the database with test data
+ * 
+ * Usage:
+ * node runSeed.js
+ */
 
-const main = async () => {
-    await db.transaction(async (tx) => {
-        try {
+import db from '../index.js';
+import seedDatabase from './seedsFunctions.js';
 
-            console.log("seeding finished")
-        } catch (e) {
-            console.error(e);
-            await tx.rollback()
-        }
-    })
+async function run() {
+  try {
+    console.log('🚀 Starting database seed process...\n');
+
+    const seedResult = await seedDatabase();
+
+    console.log('\n✅ Seed process completed successfully!');
+    process.exit(0);
+
+  } catch (error) {
+    console.error('❌ Seed process failed:', error);
+    process.exit(1);
+  }
 }
-await main()
 
+run();
