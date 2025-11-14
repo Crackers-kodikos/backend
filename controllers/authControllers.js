@@ -1,230 +1,680 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { users } from '../db/schemas/schema.js';
-import { eq } from 'drizzle-orm';
+import crypto from "crypto";
+import { users, workshops, tailors, validators, magazines, referralLinks, subscriptionPlans } from '../db/schemas/schema.js';
+import { eq, and } from 'drizzle-orm';
 import db from "../db/index.js";
-import dotenv from "dotenv"
-import { getAccessToken } from "../middleware/authMiddlewares.js";
-import { config } from "../config/env.js"
+import { config } from "../config/env.js";
 
-
-
-//the registration controller 
-export const registerUser = async (req, res) => {
-  const { username, password, firstname, lastname } = req.body;
-  // checkinng if the user is already exist
-
+// Register Workshop Owner with transaction
+export const registerWorkshopOwner = async (req, res) => {
   try {
-    const existUser = await db.select().from(users).where(eq(users.username, username)).limit(1);
-    if (existUser.length > 0) {
-      res.status(400).json({
+    const { username, password, email, firstname, lastname, phone, workshopName, workshopDescription, workshopAddress } = req.body;
+
+    // Validation
+    if (!username || !password || !email || !firstname || !lastname || !workshopName) {
+      return res.status(400).json({
         success: false,
-        message: "the username already exists "
-      })
-      return;
+        message: "Missing required fields: username, password, email, firstname, lastname, workshopName"
+      });
     }
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    })
-    return;
-  }
 
-  // Insert the new user 
-  try {
-    const saltRounds = config.saltRounds || 5;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    await db.insert(users).values({
-      username: username,
-      password: hashedPassword,
-      firstname: firstname,
-      lastname: lastname,
-      salt: "nosaltcurrently"
-    })
-    res.status(201).send({
+    // Start transaction
+    const result = await db.transaction(async (tx) => {
+      // Check existing username and email inside transaction
+      const existingUser = await tx.select().from(users).where(eq(users.username, username)).limit(1);
+      if (existingUser.length > 0) {
+        throw new Error("Username already exists");
+      }
+
+      const existingEmail = await tx.select().from(users).where(eq(users.email, email)).limit(1);
+      if (existingEmail.length > 0) {
+        throw new Error("Email already exists");
+      }
+
+      const saltRounds = config.saltRounds || 10;
+      const passwordHash = await bcrypt.hash(password, saltRounds);
+
+      // Insert user
+      const newUser = await tx.insert(users).values({
+        username,
+        passwordHash,
+        salt: crypto.randomBytes(32).toString('hex'),
+        email,
+        firstname,
+        lastname,
+        phone: phone || null,
+        userType: 'WORKSHOP_OWNER',
+        avatar: null,
+        refreshtoken: null,
+        creationdate: new Date(),
+        updationdate: new Date()
+      }).returning();
+
+      const userId = newUser[0].id;
+
+      // Insert workshop
+      const newWorkshop = await tx.insert(workshops).values({
+        ownerUserId: userId,
+        name: workshopName,
+        description: workshopDescription || null,
+        address: workshopAddress || null,
+        phone: phone || null,
+        subscriptionPlanId: null,
+        commissionPercentage: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+
+      const workshopId = newWorkshop[0].id;
+
+      // Insert referral link
+      const referralToken = crypto.randomBytes(32).toString('hex');
+      await tx.insert(referralLinks).values({
+        workshopId,
+        token: referralToken,
+        referralType: 'MAGAZINE',
+        createdAt: new Date(),
+        expiresAt: null,
+        isActive: true
+      });
+
+      // Generate JWT
+      const accessToken = jwt.sign(
+        { id: userId, userType: 'WORKSHOP_OWNER', workshopId },
+        config.jwtSecret,
+        { expiresIn: config.jwtExpiresIn || '7d' }
+      );
+
+      // Generate refresh token
+      const refreshToken = crypto.randomBytes(32).toString('hex');
+      await tx.update(users).set({ refreshtoken: refreshToken }).where(eq(users.id, userId));
+
+      // Return data (not response) from transaction
+      return {
+        userId,
+        username,
+        email,
+        firstname,
+        lastname,
+        workshopId,
+        workshopName,
+        accessToken,
+        refreshToken
+      };
+    });
+
+    // Send response OUTSIDE transaction
+    res.cookie("access_token", result.accessToken, {
+      httpOnly: true,
+      secure: config.nodeEnv === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/"
+    });
+
+    return res.status(201).json({
       success: true,
-      message: "the registration is complete successfully"
-    })
-  }
-  catch (err) {
-    res.status(500).json({
+      message: "Workshop created successfully",
+      data: {
+        id: result.userId,
+        username: result.username,
+        email: result.email,
+        firstname: result.firstname,
+        lastname: result.lastname,
+        userType: 'WORKSHOP_OWNER',
+        workshop: {
+          id: result.workshopId,
+          name: result.workshopName
+        },
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
+      }
+    });
+
+  } catch (err) {
+    console.error("Registration error:", err);
+    return res.status(500).json({
       success: false,
-      message: err.message,
-    })
+      message: err.message || "Registration failed",
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
+};
 
+// Register User with Referral using transaction
+export const registerUserWithReferral = async (req, res) => {
+  try {
+    const { username, password, email, firstname, lastname, phone, userType, referralCode } = req.body;
 
-}
+    if (!username || !password || !email || !firstname || !lastname || !userType || !referralCode) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields"
+      });
+    }
 
+    if (!['MAGAZINE_OWNER', 'TAILOR', 'VALIDATOR'].includes(userType)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userType. Must be MAGAZINE_OWNER, TAILOR, or VALIDATOR"
+      });
+    }
 
+    // Start transaction
+    const result = await db.transaction(async (tx) => {
+      // Check existing username and email inside transaction
+      const existingUser = await tx.select().from(users).where(eq(users.username, username)).limit(1);
+      if (existingUser.length > 0) {
+        throw new Error("Username already exists");
+      }
 
+      const existingEmail = await tx.select().from(users).where(eq(users.email, email)).limit(1);
+      if (existingEmail.length > 0) {
+        throw new Error("Email already exists");
+      }
 
-//THE LOGIN CONTROLLER 
+      // Validate referral code
+      const referral = await tx.select().from(referralLinks)
+        .where(and(eq(referralLinks.token, referralCode), eq(referralLinks.isActive, true)))
+        .limit(1);
 
+      if (referral.length === 0) {
+        throw new Error("Invalid or expired referral code");
+      }
+
+      const workshopId = referral[0].workshopId;
+
+      const saltRounds = config.saltRounds || 10;
+      const passwordHash = await bcrypt.hash(password, saltRounds);
+
+      // Insert user
+      const newUser = await tx.insert(users).values({
+        username,
+        passwordHash,
+        salt: crypto.randomBytes(32).toString('hex'),
+        email,
+        firstname,
+        lastname,
+        phone: phone || null,
+        userType,
+        avatar: null,
+        refreshtoken: null,
+        creationdate: new Date(),
+        updationdate: new Date()
+      }).returning();
+
+      const userId = newUser[0].id;
+
+      // Insert user-specific record based on type
+      if (userType === 'MAGAZINE_OWNER') {
+        await tx.insert(magazines).values({
+          ownerUserId: userId,
+          workshopId,
+          shopName: `${firstname}'s Shop`,
+          address: null,
+          phone: phone || null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      } else if (userType === 'TAILOR') {
+        await tx.insert(tailors).values({
+          userId,
+          workshopId,
+          fullName: `${firstname} ${lastname}`,
+          description: null,
+          skills: null,
+          availabilityStatus: 'available',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      } else if (userType === 'VALIDATOR') {
+        await tx.insert(validators).values({
+          userId,
+          workshopId,
+          fullName: `${firstname} ${lastname}`,
+          description: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+
+      // Generate JWT
+      const accessToken = jwt.sign(
+        { id: userId, userType, workshopId },
+        config.jwtSecret,
+        { expiresIn: config.jwtExpiresIn || '7d' }
+      );
+
+      // Generate refresh token
+      const refreshToken = crypto.randomBytes(32).toString('hex');
+      await tx.update(users).set({ refreshtoken: refreshToken }).where(eq(users.id, userId));
+
+      // Return data (not response) from transaction
+      return {
+        userId,
+        username,
+        email,
+        firstname,
+        lastname,
+        userType,
+        workshopId,
+        accessToken,
+        refreshToken
+      };
+    });
+
+    // Send response OUTSIDE transaction
+    res.cookie("access_token", result.accessToken, {
+      httpOnly: true,
+      secure: config.nodeEnv === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/"
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: `${result.userType} account created successfully`,
+      data: result
+    });
+
+  } catch (err) {
+    console.error("Registration error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Registration failed",
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+};
+
+// Login User
 export const loginUser = async (req, res) => {
   try {
     const { username, password } = req.body;
-    //checking if the user is exist
-    const existUser = await db.select().from(users).where(eq(users.username, username)).limit(1);
-    if (existUser.length === 0) {
-      res.status(401).json({
+
+    if (!username || !password) {
+      return res.status(400).json({
         success: false,
-        message: "the username is not valide "
-      })
-      return;
-    }
-
-    const user = existUser[0];
-    // compare if the password is correct 
-
-    const passwdCorrect = await bcrypt.compare(password, user.password);
-    if (!passwdCorrect) {
-      res.status(401).json({
-        success: false,
-        message: "the username or password is not correct !"
-      })
-      return;
-    } else {
-
-      // Genetrate JWT Token for the authentification
-      const token = jwt.sign(
-        {
-          id: user.id,
-        }
-        , config.jwtSecret,
-        { expiresIn: config.jwtExpiresIn || "1d" }
-      )
-      res.cookie("access_token", token, {
-        httpOnly: true,                // Prevents XSS attacks
-        secure: config.nodeEnv === "production", // true in production, false in development (for HTTP)
-        maxAge: 24 * 60 * 60 * 1000,   // Cookie expires in 1 day (same as token expiration)
-        path: "/",                     // Ensure the cookie is available across all paths
+        message: "Username and password are required"
       });
-
-      res.status(200).json({
-        success: true,
-        message: "the login is complete successfuly",
-        data: {
-          id: user.id,
-          accessToken: token
-        }
-      })
     }
 
-  }
-  catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message
-    })
-  }
-}
-
-
-
-// Get the authenticated user's profile data
-export const getUserProfile = async (req, res) => {
-  try {
-    const userId = req.user;
-
-    const foundUsers = await db.select().from(users).where(
-      eq(users.id, userId)
-    ).limit(1)
+    // Find user
+    const foundUsers = await db.select().from(users).where(eq(users.username, username)).limit(1);
 
     if (foundUsers.length === 0) {
-      res.status(409).json({
+      return res.status(401).json({
         success: false,
-        message: 'The accesstoken has invalid userId!'
-      })
-      return;
+        message: "Invalid username or password"
+      });
     }
-    const user = foundUsers[0]
-    console.log(user)
-    res.status(200).json({
+
+    const user = foundUsers[0];
+
+    // Verify password
+    const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or password"
+      });
+    }
+
+    // Get additional data based on user type
+    let additionalData = {};
+
+    if (user.userType === 'WORKSHOP_OWNER') {
+      const workshop = await db.select().from(workshops)
+        .where(eq(workshops.ownerUserId, user.id))
+        .limit(1);
+      if (workshop.length > 0) {
+        additionalData.workshopId = workshop[0].id;
+        additionalData.workshopName = workshop[0].name;
+      }
+    } else if (user.userType === 'MAGAZINE_OWNER') {
+      const magazine = await db.select().from(magazines)
+        .where(eq(magazines.ownerUserId, user.id))
+        .limit(1);
+      if (magazine.length > 0) {
+        additionalData.magazineId = magazine[0].id;
+        additionalData.workshopId = magazine[0].workshopId;
+      }
+    } else if (user.userType === 'TAILOR') {
+      const tailor = await db.select().from(tailors)
+        .where(eq(tailors.userId, user.id))
+        .limit(1);
+      if (tailor.length > 0) {
+        additionalData.tailorId = tailor[0].id;
+        additionalData.workshopId = tailor[0].workshopId;
+      }
+    } else if (user.userType === 'VALIDATOR') {
+      const validator = await db.select().from(validators)
+        .where(eq(validators.userId, user.id))
+        .limit(1);
+      if (validator.length > 0) {
+        additionalData.validatorId = validator[0].id;
+        additionalData.workshopId = validator[0].workshopId;
+      }
+    }
+
+    // Generate tokens
+    const accessToken = jwt.sign(
+      { id: user.id, userType: user.userType, ...additionalData },
+      config.jwtSecret,
+      { expiresIn: config.jwtExpiresIn || '7d' }
+    );
+
+    const refreshToken = crypto.randomBytes(32).toString('hex');
+    await db.update(users).set({ refreshtoken: refreshToken }).where(eq(users.id, user.id));
+
+    res.cookie("access_token", accessToken, {
+      httpOnly: true,
+      secure: config.nodeEnv === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/"
+    });
+
+    return res.status(200).json({
       success: true,
-      message: 'Data retrieved successfully',
+      message: "Login successful",
       data: {
         id: user.id,
         username: user.username,
-        avatar: user.avatar,
         email: user.email,
         firstname: user.firstname,
-        lastname: user.lastname
+        lastname: user.lastname,
+        userType: user.userType,
+        ...additionalData,
+        accessToken,
+        refreshToken
       }
-    })
-  } catch (error) {
-    console.log(error)
-    res.status(500).json({ message: 'Error retrieving user profile', error: error.message });
+    });
+
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Login failed",
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 };
 
-// Update the authenticated user's profile
-export const updateUserProfile = async (req, res) => {
+// Get User Profile
+export const getUserProfile = async (req, res) => {
   try {
-    const userId = req.user;
-    const {
-      username,
-      avatar,
-      email,
-      firstname,
-      lastname
-    } = req.body
+    const userId = req.user.id;
 
-    const body = {
-      username,
-      avatar,
-      email,
-      firstname,
-      lastname
+    const foundUsers = await db.select().from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (foundUsers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
     }
 
-    const newData = Object.fromEntries(Object.entries(body).filter((v, i) => v[1] !== null))
+    const user = foundUsers[0];
 
-    const updated = await db.update(users).set(newData).where(eq(users.id, userId))
+    let profileData = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      phone: user.phone,
+      avatar: user.avatar,
+      userType: user.userType
+    };
 
-    res.json({
+    // Get role-specific data
+    if (user.userType === 'WORKSHOP_OWNER') {
+      const workshop = await db.select().from(workshops)
+        .where(eq(workshops.ownerUserId, user.id))
+        .limit(1);
+      if (workshop.length > 0) {
+        profileData.workshop = {
+          id: workshop[0].id,
+          name: workshop[0].name,
+          description: workshop[0].description,
+          address: workshop[0].address,
+          phone: workshop[0].phone
+        };
+      }
+    } else if (user.userType === 'MAGAZINE_OWNER') {
+      const magazine = await db.select().from(magazines)
+        .where(eq(magazines.ownerUserId, user.id))
+        .limit(1);
+      if (magazine.length > 0) {
+        profileData.magazine = {
+          id: magazine[0].id,
+          shopName: magazine[0].shopName,
+          address: magazine[0].address,
+          phone: magazine[0].phone,
+          workshopId: magazine[0].workshopId
+        };
+      }
+    } else if (user.userType === 'TAILOR') {
+      const tailor = await db.select().from(tailors)
+        .where(eq(tailors.userId, user.id))
+        .limit(1);
+      if (tailor.length > 0) {
+        profileData.tailor = {
+          id: tailor[0].id,
+          fullName: tailor[0].fullName,
+          description: tailor[0].description,
+          skills: tailor[0].skills,
+          availabilityStatus: tailor[0].availabilityStatus,
+          workshopId: tailor[0].workshopId
+        };
+      }
+    } else if (user.userType === 'VALIDATOR') {
+      const validator = await db.select().from(validators)
+        .where(eq(validators.userId, user.id))
+        .limit(1);
+      if (validator.length > 0) {
+        profileData.validator = {
+          id: validator[0].id,
+          fullName: validator[0].fullName,
+          description: validator[0].description,
+          workshopId: validator[0].workshopId
+        };
+      }
+    }
+
+    return res.status(200).json({
       success: true,
-      message: 'User`s data updated successfully'
-    })
-    // ... existing code ...
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: 'Error updating user profile', error: error.message });
+      message: "Profile retrieved successfully",
+      data: profileData
+    });
+
+  } catch (err) {
+    console.error("Error retrieving profile:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve profile",
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 };
 
-// Log out the user  ماتخدمهاش مانحتاجوهاش
+// Update User Profile
+export const updateUserProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { firstname, lastname, phone, avatar, email } = req.body;
+
+    const updateData = {};
+    if (firstname) updateData.firstname = firstname;
+    if (lastname) updateData.lastname = lastname;
+    if (phone) updateData.phone = phone;
+    if (avatar) updateData.avatar = avatar;
+    if (email) updateData.email = email;
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No fields to update"
+      });
+    }
+
+    updateData.updationdate = new Date();
+
+    await db.update(users).set(updateData).where(eq(users.id, userId));
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully"
+    });
+
+  } catch (err) {
+    console.error("Error updating profile:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+};
+
+// Logout User
 export const logoutUser = (req, res) => {
   try {
     res.clearCookie("access_token", {
       httpOnly: true,
-      secure: (config.secure),
-      sameSite: config.nodeEnv === "production" ? "none" : "lax",
-      maxAge: 0,
+      secure: config.nodeEnv === "production",
       path: "/"
-    })
-    res.status(200).json({
+    });
+
+    return res.status(200).json({
       success: true,
-      message: 'The user is logged out successfully'
-    })
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating user profile', error: error.message });
+      message: "Logged out successfully"
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Logout failed",
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 };
 
-
-
-
+// Check Authentication
 export const checkAuth = async (req, res) => {
   try {
     return res.status(200).json({
       success: true,
-      message: 'The user is authenticated',
-      accessToken: req.token
-    })
+      message: "User is authenticated",
+      user: req.user
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Authentication check failed",
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
-  catch (err) {
-    res.status(500).json({ message: 'Error checking authentication', error: err.message });
+};
+
+// Get Referral Link (Workshop Owners Only)
+export const getReferralLink = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { referralType } = req.body;
+
+    if (!referralType || !['MAGAZINE', 'TAILOR', 'VALIDATOR'].includes(referralType)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid referralType. Must be MAGAZINE, TAILOR, or VALIDATOR"
+      });
+    }
+
+    // Get workshop
+    const workshop = await db.select().from(workshops)
+      .where(eq(workshops.ownerUserId, userId))
+      .limit(1);
+
+    if (workshop.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: "User is not a workshop owner"
+      });
+    }
+
+    const workshopId = workshop[0].id;
+
+    // Generate new referral link
+    const referralToken = crypto.randomBytes(32).toString('hex');
+    const newReferral = await db.insert(referralLinks).values({
+      workshopId,
+      token: referralToken,
+      referralType,
+      createdAt: new Date(),
+      expiresAt: null,
+      isActive: true
+    }).returning();
+
+    return res.status(201).json({
+      success: true,
+      message: "Referral link created successfully",
+      data: {
+        id: newReferral[0].id,
+        token: newReferral[0].token,
+        referralType: newReferral[0].referralType,
+        createdAt: newReferral[0].createdAt
+      }
+    });
+
+  } catch (err) {
+    console.error("Error creating referral link:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create referral link",
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
-}
+};
+
+// Get All Referral Links (Workshop Owners Only)
+export const getAllReferralLinks = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get workshop
+    const workshop = await db.select().from(workshops)
+      .where(eq(workshops.ownerUserId, userId))
+      .limit(1);
+
+    if (workshop.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: "User is not a workshop owner"
+      });
+    }
+
+    const workshopId = workshop[0].id;
+
+    // Get all referral links
+    const links = await db.select().from(referralLinks)
+      .where(eq(referralLinks.workshopId, workshopId));
+
+    return res.status(200).json({
+      success: true,
+      message: "Referral links retrieved successfully",
+      data: links
+    });
+
+  } catch (err) {
+    console.error("Error retrieving referral links:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve referral links",
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+};

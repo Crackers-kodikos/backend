@@ -1,0 +1,410 @@
+### ========================================
+### MAGAZINE MANAGEMENT - HTTP TESTS
+### ========================================
+### Base URL: http://localhost:3232
+### All tests require Magazine Owner token
+### Tested with VS Code REST Client extension
+### ========================================
+
+@baseUrl = http://localhost:3232
+@magazineToken = 
+@workshopId = 1
+@orderId = 
+
+### ========================================
+### SETUP: Create Test Data
+### ========================================
+
+### SETUP-1: Register Workshop Owner (if needed)
+POST {{baseUrl}}/api/auth/register/workshop
+Content-Type: application/json
+
+{
+  "username": "workshop_setup_1",
+  "password": "SecurePass123!",
+  "email": "workshop_setup@test.com",
+  "firstname": "Ahmed",
+  "lastname": "Mohamed",
+  "workshopName": "Elite Tailoring Workshop",
+  "workshopDescription": "Premium custom tailoring",
+  "workshopAddress": "123 Fashion St",
+  "phone": "+213600000001"
+}
+
+### SETUP-2: Get Workshop ID
+# From SETUP-1 response, note the workshop ID
+
+### SETUP-3: Generate Magazine Referral Link
+# Use workshop token from SETUP-1
+POST {{baseUrl}}/api/referral/magazine
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsInVzZXJUeXBlIjoiV09SS1NIT1BfT1dORVIiLCJ3b3Jrc2hvcElkIjo3LCJpYXQiOjE3NjMxNTUxNDUsImV4cCI6MTc2NTc0NzE0NX0.1B0v-vRnIbrMLbOud4zAC4BvHR_gbKzokC_FSG6vv_o
+Content-Type: application/json
+
+{
+  "expiresInDays": 30
+}
+
+### SETUP-4: Copy referral token from SETUP-3 response
+# Use this token in next step
+
+### SETUP-5: Register Magazine Owner (with referral)
+POST {{baseUrl}}/api/auth/register/user
+Content-Type: application/json
+
+{
+  "username": "magazine_test_1",
+  "password": "SecurePass123!",
+  "email": "magazine@test.com",
+  "firstname": "Fatima",
+  "lastname": "Ali",
+  "phone": "+213600000002",
+  "userType": "MAGAZINE_OWNER",
+  "referralCode": "ba3ea293551f54fc984350a8c49d0750af635b84695e499d057b9171df420d96"
+}
+
+### SETUP-6: Login as Magazine Owner
+# Copy accessToken and set @magazineToken
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "magazine_test_1",
+  "password": "SecurePass123!"
+}
+
+### ========================================
+### 1. MAGAZINE PROFILE TESTS
+### ========================================
+
+### 1.1 - Get Magazine Profile
+GET {{baseUrl}}/api/magazine/profile
+Authorization: Bearer {{magazineToken}}
+
+### 1.2 - Update Magazine Profile
+PUT {{baseUrl}}/api/magazine/profile
+Authorization: Bearer {{magazineToken}}
+Content-Type: application/json
+
+{
+  "shopName": "Updated Fashion Shop",
+  "address": "456 Shopping Mall, Downtown",
+  "phone": "+213611111111"
+}
+
+### 1.3 - Verify Profile Updated
+GET {{baseUrl}}/api/magazine/profile
+Authorization: Bearer {{magazineToken}}
+
+### ========================================
+### 2. MAGAZINE DASHBOARD
+### ========================================
+
+### 2.1 - Get Dashboard Overview
+# Shows stats, orders, spending
+GET {{baseUrl}}/api/magazine/dashboard
+Authorization: Bearer {{magazineToken}}
+
+### ========================================
+### 3. DISCOVER WORKSHOPS
+### ========================================
+
+### 3.1 - Get Available Workshops
+# View all workshops to place orders
+GET {{baseUrl}}/api/magazine/workshops
+Authorization: Bearer {{magazineToken}}
+
+### 3.2 - Search Workshops (optional filter)
+GET {{baseUrl}}/api/magazine/workshops?search=premium
+Authorization: Bearer {{magazineToken}}
+
+### ========================================
+### 4. ORDER MANAGEMENT - CREATE
+### ========================================
+
+### 4.1 - Create New Order
+# Set @workshopId from 3.1 response
+POST {{baseUrl}}/api/magazine/orders
+Authorization: Bearer {{magazineToken}}
+Content-Type: application/json
+
+{
+  "workshopId": {{workshopId}},
+  "orderNumber": "ORD-001",
+  "description": "10 women's dresses with embroidery",
+  "estimatedCompletionDate": "2025-12-20T00:00:00Z",
+  "totalPrice": 1500.00,
+  "items": [
+    {
+      "description": "Red silk dress with gold embroidery"
+    },
+    {
+      "description": "Blue cotton dress with traditional patterns"
+    }
+  ]
+}
+
+### 4.2 - Create Second Order
+POST {{baseUrl}}/api/magazine/orders
+Authorization: Bearer {{magazineToken}}
+Content-Type: application/json
+
+{
+  "workshopId": {{workshopId}},
+  "orderNumber": "ORD-002",
+  "description": "Women's formal wear collection",
+  "estimatedCompletionDate": "2025-12-25T00:00:00Z",
+  "totalPrice": 2000.00,
+  "items": [
+    {
+      "description": "Evening gowns with beading"
+    }
+  ]
+}
+
+### ========================================
+### 5. ORDER MANAGEMENT - VIEW
+### ========================================
+
+### 5.1 - Get All Orders
+GET {{baseUrl}}/api/magazine/orders
+Authorization: Bearer {{magazineToken}}
+
+### 5.2 - Get Pending Orders Only
+GET {{baseUrl}}/api/magazine/orders?status=PENDING
+Authorization: Bearer {{magazineToken}}
+
+### 5.3 - Get Validated Orders
+GET {{baseUrl}}/api/magazine/orders?status=VALIDATED
+Authorization: Bearer {{magazineToken}}
+
+### 5.4 - Get Tailoring Orders
+GET {{baseUrl}}/api/magazine/orders?status=TAILORING
+Authorization: Bearer {{magazineToken}}
+
+### 5.5 - Get Completed Orders
+GET {{baseUrl}}/api/magazine/orders?status=COMPLETED
+Authorization: Bearer {{magazineToken}}
+
+### 5.6 - Get Specific Order Details
+# Set @orderId from 4.1 or 5.1 response
+GET {{baseUrl}}/api/magazine/orders/{{orderId}}
+Authorization: Bearer {{magazineToken}}
+
+### ========================================
+### 6. ORDER MANAGEMENT - UPDATE (PENDING)
+### ========================================
+
+### 6.1 - Update Order (only if PENDING)
+PUT {{baseUrl}}/api/magazine/orders/{{orderId}}
+Authorization: Bearer {{magazineToken}}
+Content-Type: application/json
+
+{
+  "description": "Updated: 12 women's dresses instead of 10",
+  "estimatedCompletionDate": "2025-12-22T00:00:00Z",
+  "totalPrice": 1800.00
+}
+
+### 6.2 - Update Only Description
+PUT {{baseUrl}}/api/magazine/orders/{{orderId}}
+Authorization: Bearer {{magazineToken}}
+Content-Type: application/json
+
+{
+  "description": "Final description update"
+}
+
+### 6.3 - Update Only Price
+PUT {{baseUrl}}/api/magazine/orders/{{orderId}}
+Authorization: Bearer {{magazineToken}}
+Content-Type: application/json
+
+{
+  "totalPrice": 1900.00
+}
+
+### ========================================
+### 7. ORDER MANAGEMENT - CANCEL
+### ========================================
+
+### 7.1 - Cancel Order (only if PENDING)
+DELETE {{baseUrl}}/api/magazine/orders/{{orderId}}
+Authorization: Bearer {{magazineToken}}
+
+### 7.2 - Verify Order Cancelled
+GET {{baseUrl}}/api/magazine/orders
+Authorization: Bearer {{magazineToken}}
+
+### ========================================
+### ERROR HANDLING TESTS
+### ========================================
+
+### E1 - Create Order with Invalid Workshop ID
+POST {{baseUrl}}/api/magazine/orders
+Authorization: Bearer {{magazineToken}}
+Content-Type: application/json
+
+{
+  "workshopId": 99999,
+  "orderNumber": "ORD-ERR-001",
+  "totalPrice": 500.00,
+  "items": []
+}
+
+### E2 - Create Order with Missing Fields
+POST {{baseUrl}}/api/magazine/orders
+Authorization: Bearer {{magazineToken}}
+Content-Type: application/json
+
+{
+  "workshopId": 1
+}
+
+### E3 - Update Non-Existent Order
+PUT {{baseUrl}}/api/magazine/orders/99999
+Authorization: Bearer {{magazineToken}}
+Content-Type: application/json
+
+{
+  "description": "This should fail"
+}
+
+### E4 - Cancel Non-Existent Order
+DELETE {{baseUrl}}/api/magazine/orders/99999
+Authorization: Bearer {{magazineToken}}
+
+### E5 - Get Profile Without Auth
+GET {{baseUrl}}/api/magazine/profile
+
+### E6 - Create Order as Non-Magazine User
+# After registering a different user type
+POST {{baseUrl}}/api/magazine/orders
+Authorization: Bearer <non_magazine_token>
+Content-Type: application/json
+
+{
+  "workshopId": 1,
+  "orderNumber": "ORD-ERR-002",
+  "totalPrice": 500.00,
+  "items": []
+}
+
+### ========================================
+### TESTING WORKFLOW
+### ========================================
+###
+### PHASE 1: Setup (SETUP-1 to SETUP-6)
+### • Register workshop owner
+### • Create referral link
+### • Register magazine owner
+### • Login and get token
+### • Copy @magazineToken
+###
+### PHASE 2: Profile (1.1 to 1.3)
+### • Get profile
+### • Update profile
+### • Verify changes
+###
+### PHASE 3: Discovery (3.1 to 3.2)
+### • Browse workshops
+### • Note @workshopId
+###
+### PHASE 4: Create Orders (4.1 to 4.2)
+### • Create order 1
+### • Create order 2
+### • Copy @orderId from response
+###
+### PHASE 5: View Orders (5.1 to 5.6)
+### • Get all orders
+### • Filter by status
+### • Get specific order
+###
+### PHASE 6: Update Orders (6.1 to 6.3)
+### • Update full order
+### • Update partial fields
+### • Verify changes
+###
+### PHASE 7: Cancel Orders (7.1 to 7.2)
+### • Cancel order
+### • Verify cancellation
+###
+### PHASE 8: Error Testing (E1 to E6)
+### • Test invalid data
+### • Test missing fields
+### • Test auth errors
+###
+### ========================================
+### EXPECTED STATUS CODES
+### ========================================
+###
+### 200 OK
+### • GET requests
+### • PUT requests for updates
+### • DELETE for cancellation
+###
+### 201 CREATED
+### • POST for order creation
+###
+### 400 BAD REQUEST
+### • Missing required fields
+### • Invalid workshop ID
+### • Update with no fields
+### • Can't update non-PENDING order
+###
+### 401 UNAUTHORIZED
+### • Missing token
+### • Invalid token
+###
+### 403 FORBIDDEN
+### • Non-magazine user accessing
+###
+### 404 NOT FOUND
+### • Order not found
+### • Workshop not found
+###
+### 500 SERVER ERROR
+### • Database errors
+###
+### ========================================
+### RESPONSE EXAMPLES
+### ========================================
+###
+### Create Order (201):
+### {
+###   "success": true,
+###   "message": "Order created successfully",
+###   "data": {
+###     "id": 1,
+###     "magazineId": 1,
+###     "workshopId": 1,
+###     "orderNumber": "ORD-001",
+###     "currentStatus": "PENDING",
+###     "totalPrice": 1500,
+###     "createdAt": "2025-11-14T..."
+###   }
+### }
+###
+### Get Orders (200):
+### {
+###   "success": true,
+###   "message": "Orders retrieved successfully",
+###   "data": {
+###     "count": 2,
+###     "orders": [ ... ]
+###   }
+### }
+###
+### ========================================
+### TIPS
+### ========================================
+###
+### • Always do SETUP first
+### • Set variables after each step
+### • @orderId needed for update/delete
+### • @workshopId needed for order creation
+### • Can only modify PENDING orders
+### • Check status filters (5.2-5.5)
+### • Test error cases systematically
+### • Watch response codes closely
+###
+### ========================================

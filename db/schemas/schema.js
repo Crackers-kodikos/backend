@@ -9,25 +9,25 @@ export const itemStatusEnum = pgEnum('item_status', ['PENDING', 'IN_PROGRESS', '
 
 // Tables
 export const users = pgTable("users", {
-    id: serial().primaryKey().notNull(),
-    username: varchar({ length: 50 }).notNull(),
-    salt: varchar({ length: 255 }),
-    refreshtoken: varchar({ length: 255 }),
-    creationdate: timestamp({ withTimezone: true, mode: 'date' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    updationdate: timestamp({ withTimezone: true, mode: 'date' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    avatar: varchar({ length: 255 }),
-    email: varchar({ length: 100 }).notNull(),
-    firstname: varchar({ length: 50 }),
-    lastname: varchar({ length: 50 }),
-    phone: varchar({ length: 20 }),
-    userType: userTypeEnum('user_type').notNull(),
-    passwordHash: varchar({ length: 255 }).notNull(),
+  id: serial().primaryKey().notNull(),
+  username: varchar({ length: 50 }).notNull(),
+  salt: varchar({ length: 255 }),
+  refreshtoken: varchar({ length: 255 }),
+  creationdate: timestamp({ withTimezone: true, mode: 'date' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updationdate: timestamp({ withTimezone: true, mode: 'date' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  avatar: varchar({ length: 255 }),
+  email: varchar({ length: 100 }).notNull(),
+  firstname: varchar({ length: 50 }),
+  lastname: varchar({ length: 50 }),
+  phone: varchar({ length: 20 }),
+  userType: userTypeEnum('user_type').notNull(),
+  passwordHash: varchar({ length: 255 }).notNull(),
 }, (table) => [
-    unique("users_username_key").on(table.username),
-    unique("users_refreshtoken_key").on(table.refreshtoken),
-    unique("users_email_key").on(table.email),
-    check("users_email_check", sql`(email)::text ~ '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'::text`),
-    check("users_username_check", sql`(length((username)::text) > 3) AND ((username)::text ~ '^[a-zA-Z0-9_]+$'::text)`),
+  unique("users_username_key").on(table.username),
+  unique("users_refreshtoken_key").on(table.refreshtoken),
+  unique("users_email_key").on(table.email),
+  check("users_email_check", sql`(email)::text ~ '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'::text`),
+  check("users_username_check", sql`(length((username)::text) > 3) AND ((username)::text ~ '^[a-zA-Z0-9_]+$'::text)`),
 ]);
 
 export const subscriptionPlans = pgTable('subscription_plans', {
@@ -40,7 +40,7 @@ export const subscriptionPlans = pgTable('subscription_plans', {
   features: text('features'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
-    unique("subscription_plans_plan_name_key").on(table.planName),
+  unique("subscription_plans_plan_name_key").on(table.planName),
 ]);
 
 export const workshops = pgTable('workshops', {
@@ -51,7 +51,7 @@ export const workshops = pgTable('workshops', {
   address: varchar('address', { length: 255 }),
   phone: varchar('phone', { length: 20 }),
   commissionPercentage: decimal('commission_percentage', { precision: 5, scale: 2 }),
-  subscriptionPlanId: serial('subscription_plan_id').notNull(),
+  subscriptionPlanId: serial('subscription_plan_id'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
