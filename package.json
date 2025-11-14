@@ -12,10 +12,11 @@
     "drizzle:push": "drizzle-kit push ",
     "drizzle:pull": "drizzle-kit pull ",
     "drizzle:seed": "node db/seeds/index.js",
-    "drizzle:seed:mock": "node db/seeds/seedMockData.js",
     "drizzle:clearseed": "node ./db/seeds/clearSeeds.js",
     "drizzle:studio": "npx drizzle-kit studio --port 3000 --verbose",
-    "test": "npx nodemon playground.js"
+    "test": "npx nodemon playground.js",
+    "docker:compose": "docker compose up -d",
+    "docker:down": "docker-compose down -v"
   },
   "repository": {
     "type": "git",
