@@ -5,13 +5,13 @@ services:
     build: .
     container_name: kodikos-api-express
     ports:
-      - 3232:3232
+      - 3233:3232
     volumes:
       - ./:/app
       - /app/node_modules
     environment:
     -  PORT=3232
-    - DATABASE_URL="postgresql://postgres:lenovo@localhost:5432/kodikos"
+    - DATABASE_URL=postgresql://postgres:password@db:5432/kodikosdb
     - BCRYPT_SALT_ROUNDS=5
     - JWT_SECRET="your-secret-key"
     - JWT_EXPIRES_IN="30d"
@@ -31,7 +31,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: kodikosdb
     ports:
-      - 5432:5432
+      - 5433:5432
     volumes:
       - db-data:/var/lib/postgresql/data
 
