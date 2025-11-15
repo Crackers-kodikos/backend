@@ -3,6 +3,7 @@
 ## 📌 What is Khayt? (The Simple Explanation)
 
 Imagine you own a small clothing boutique in your city. You sometimes need to order **custom-made clothes** from local tailoring workshops. Currently, you:
+
 - Call or visit the workshop manually
 - Explain what you need verbally
 - Wait and hope they understand
@@ -10,6 +11,7 @@ Imagine you own a small clothing boutique in your city. You sometimes need to or
 - Can't track progress
 
 **Khayt solves this problem.** It's a **digital platform that connects boutique shops with tailoring workshops**, allowing them to:
+
 - Place orders online with detailed specifications
 - Track order progress in real-time
 - Know exactly when clothes will be ready
@@ -21,6 +23,7 @@ Imagine you own a small clothing boutique in your city. You sometimes need to or
 ## 🎯 The Core Problem
 
 ### Before Khayt (Traditional Way):
+
 ```
 Boutique Owner → Calls Workshop → Verbal Miscommunication → Delayed Orders
                                  → No Tracking
@@ -29,6 +32,7 @@ Boutique Owner → Calls Workshop → Verbal Miscommunication → Delayed Orders
 ```
 
 ### With Khayt (Digital Way):
+
 ```
 Boutique Owner → Online Order → Clear Specifications → Real-time Tracking
                  → Assigned to Tailors → Quality Control → Ready Notification
@@ -39,9 +43,11 @@ Boutique Owner → Online Order → Clear Specifications → Real-time Tracking
 ## 👥 Who Uses Khayt?
 
 ### 1. **Workshop Owner** (The Business)
+
 The person who owns the tailoring workshop.
 
 **What they do:**
+
 - Create an account and set up their workshop
 - Choose a subscription plan (like gym memberships)
 - Build their team (hire tailors and quality checkers)
@@ -54,9 +60,11 @@ The person who owns the tailoring workshop.
 ---
 
 ### 2. **Tailor** (The Worker)
+
 The person who actually sews the clothes.
 
 **What they do:**
+
 - Register to join a workshop
 - View tasks assigned to them
 - Update task status (started, in progress, completed)
@@ -68,9 +76,11 @@ The person who actually sews the clothes.
 ---
 
 ### 3. **Validator/Quality Checker** (The Manager)
+
 The person who checks orders and quality.
 
 **What they do:**
+
 - Check if incoming orders are correct
 - Reject orders with mistakes
 - Assign work to tailors based on their skills
@@ -82,9 +92,11 @@ The person who checks orders and quality.
 ---
 
 ### 4. **Boutique Shop Owner/Magazine** (The Customer)
+
 The person who owns a local boutique and needs custom clothes.
 
 **What they do:**
+
 - Find a tailoring workshop
 - Place orders specifying exactly what they need
 - Track order status in real-time
@@ -175,7 +187,8 @@ Just like Netflix has plans (Basic, Standard, Premium), Khayt has plans that giv
 
 ### Three Plans:
 
-#### **🟢 Beginner Plan ($****/month)**
+#### **🟢 Beginner Plan ($\*\***/month)\*\*
+
 - Can work with **3 boutique shops** (you can only take orders from 3 shops)
 - Can hire **3 tailors** (your team size)
 - Can hire **1 quality checker** (1 manager)
@@ -186,7 +199,8 @@ Just like Netflix has plans (Basic, Standard, Premium), Khayt has plans that giv
 
 ---
 
-#### **🟡 Professional Plan ($****/month)**
+#### **🟡 Professional Plan ($\*\***/month)\*\*
+
 - Can work with **10 boutique shops**
 - Can hire **10 tailors**
 - Can hire **2 quality checkers**
@@ -197,7 +211,8 @@ Just like Netflix has plans (Basic, Standard, Premium), Khayt has plans that giv
 
 ---
 
-#### **🔴 Enterprise Plan ($****/month)**
+#### **🔴 Enterprise Plan ($\*\***/month)\*\*
+
 - Can work with **100+ boutique shops**
 - Can hire **100+ tailors**
 - Can hire **10+ quality checkers**
@@ -268,6 +283,7 @@ Why this is useful:
 ```
 
 **Real Example:**
+
 ```
 Workshop Owner: "Hey Ahmed, join my workshop on Khayt!"
 Ahmed: "How?"
@@ -387,6 +403,7 @@ Validator sees:
 ### Why This Architecture?
 
 **The problem we solved:**
+
 - Multiple user types with different needs
 - Real-time order status updates
 - Data must be consistent (can't have conflicting information)
@@ -395,24 +412,28 @@ Validator sees:
 **Our solution:**
 
 1. **API-First Design**
+
    - Frontend talks to API endpoints
    - All data goes through API
    - Ensures data consistency
    - Easy to add mobile app later
 
 2. **Role-Based Access Control**
+
    - Each user type has specific endpoints they can access
    - Validators cannot access tailor endpoints
    - Boutiques cannot access validator endpoints
    - Prevents unauthorized access
 
 3. **State Machine for Orders**
+
    - Order must follow specific workflow
    - Cannot go backwards (COMPLETED → PENDING is forbidden)
    - Only specific roles can make transitions
    - Prevents chaos and errors
 
 4. **Audit Trail**
+
    - Every status change is logged
    - Timestamps recorded
    - Can answer: "When did this happen? Who did it?"
@@ -431,6 +452,7 @@ Validator sees:
 ### Why Docker?
 
 Docker is like a **container** that has everything the app needs:
+
 - Node.js (the server)
 - PostgreSQL (the database)
 - All dependencies
@@ -494,11 +516,14 @@ SECURE=false
 # 2. Node.js API server
 # 3. Runs database setup
 # 4. Seeds sample data
+npm run docker:compose
 
-docker-compose up -d
+# ALTERNATIVE
+docker compose up -d
 ```
 
 **What happens:**
+
 1. Docker pulls PostgreSQL image
 2. Docker builds Node.js image
 3. Database starts and initializes
@@ -506,6 +531,7 @@ docker-compose up -d
 5. Sample data gets populated
 
 **Output looks like:**
+
 ```
 kodikos-db  | PostgreSQL started successfully
 kodikos-api | ✅ Database ready!
@@ -522,20 +548,20 @@ Open a new terminal and test:
 
 ```bash
 # This should return a list of subscription plans
-curl http://localhost:3232/api/subscriptions/plans
+curl http://localhost:3232/
 ```
 
-If you see JSON response with plans, it's working! ✅
+If you see a response its working! ✅
 
 ---
 
 ### Step 5: Stop Everything
 
 ```bash
-# When you want to stop:
-docker-compose down
-
 # If you want to completely clean up (removes data):
+npm run docker:down
+
+# ALTERNATIVE
 docker-compose down -v
 ```
 
@@ -631,16 +657,19 @@ Example from Frontend:
 
 ```javascript
 // Login
-const response = await fetch('http://localhost:3232/api/auth/login', {
-  method: 'POST',
-  body: JSON.stringify({ username: 'workshop_owner_1', password: 'Workshop@123' })
+const response = await fetch("http://localhost:3232/api/auth/login", {
+  method: "POST",
+  body: JSON.stringify({
+    username: "workshop_owner_1",
+    password: "Workshop@123",
+  }),
 });
 const data = await response.json();
 const token = data.data.accessToken;
 
 // Get workshop profile
-const profile = await fetch('http://localhost:3232/api/workshop/profile', {
-  headers: { 'Authorization': `Bearer ${token}` }
+const profile = await fetch("http://localhost:3232/api/workshop/profile", {
+  headers: { Authorization: `Bearer ${token}` },
 });
 ```
 
@@ -648,30 +677,34 @@ const profile = await fetch('http://localhost:3232/api/workshop/profile', {
 
 ## 🎯 Key Concepts Summary
 
-| Concept | What It Is | Example |
-|---------|-----------|---------|
-| **Order** | A request from boutique to workshop | "Need 5 dresses by Nov 30" |
-| **Task** | Individual piece of work for one tailor | "Embroider dress #1" |
-| **Validation** | Quality checker approves order | Ahmed checks if order is doable |
-| **Assignment** | Distributing tasks to tailors | "Ahmed does embroidery, Fatima does sewing" |
-| **Status** | Current state of order | PENDING → VALIDATED → TAILORING → COMPLETED |
-| **Tracking** | Following order progress | "80% complete, will be ready tomorrow" |
-| **Subscription** | Monthly payment plan | Professional plan for $99.99 = 10 tailors max |
-| **Role** | User type and permissions | Workshop Owner, Tailor, Validator, Boutique |
+| Concept          | What It Is                              | Example                                       |
+| ---------------- | --------------------------------------- | --------------------------------------------- |
+| **Order**        | A request from boutique to workshop     | "Need 5 dresses by Nov 30"                    |
+| **Task**         | Individual piece of work for one tailor | "Embroider dress #1"                          |
+| **Validation**   | Quality checker approves order          | Ahmed checks if order is doable               |
+| **Assignment**   | Distributing tasks to tailors           | "Ahmed does embroidery, Fatima does sewing"   |
+| **Status**       | Current state of order                  | PENDING → VALIDATED → TAILORING → COMPLETED   |
+| **Tracking**     | Following order progress                | "80% complete, will be ready tomorrow"        |
+| **Subscription** | Monthly payment plan                    | Professional plan for $99.99 = 10 tailors max |
+| **Role**         | User type and permissions               | Workshop Owner, Tailor, Validator, Boutique   |
 
 ---
 
 ## 🆘 Troubleshooting
 
 ### **Issue: "Port 3232 already in use"**
+
 **Solution:**
+
 ```bash
 # Kill the process using port 3232
 lsof -ti:3232 | xargs kill -9
 ```
 
 ### **Issue: "Cannot connect to database"**
+
 **Solution:**
+
 ```bash
 # Check if Docker is running
 docker ps
@@ -680,7 +713,9 @@ docker ps
 ```
 
 ### **Issue: "Permission denied: shell.sh"**
+
 **Solution:**
+
 ```bash
 chmod +x shell.sh
 docker-compose build --no-cache
@@ -688,6 +723,7 @@ docker-compose up
 ```
 
 ### **Issue: "API returns 401 Unauthorized"**
+
 **Solution:** Your token expired. Login again and get a new token.
 
 ---
@@ -707,7 +743,6 @@ docker-compose up
 - **postman_collection.json** - Ready-to-use API tests
 
 ---
-
 
 **Version:** 1.0.0  
 **Ready to deploy!** 🚀

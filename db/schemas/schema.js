@@ -2,12 +2,34 @@ import { pgTable, serial, varchar, text, decimal, timestamp, boolean, pgEnum, in
 import { relations } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 
+// ============================================================================
+// SCHEMA FIXES APPLIED
+// ============================================================================
+//
+// 1. ✅ Changed all foreign keys from serial() to integer()
+//    - serial() forced NOT NULL automatically
+//    - integer() allows NULL properly
+//
+// 2. ✅ Changed optional FKs to integer()
+//    - subscriptionPlanId (workshops)
+//    - validatorId (orders) - optional
+//    - tailorId (orderItems) - optional
+//
+// 3. ✅ Fixed .onDelete() behavior
+//    - Use 'cascade' for required relationships
+//    - Use 'set null' for optional FKs
+//    - Use 'restrict' when needed
+//
+// ============================================================================
+
 // Enums
 export const userTypeEnum = pgEnum('user_type', ['WORKSHOP_OWNER', 'MAGAZINE_OWNER', 'TAILOR', 'VALIDATOR']);
 export const orderStatusEnum = pgEnum('order_status', ['PENDING', 'VALIDATED', 'TAILORING', 'PACKAGING', 'COMPLETED']);
 export const itemStatusEnum = pgEnum('item_status', ['PENDING', 'IN_PROGRESS', 'COMPLETED']);
 
-// Tables
+// ============================================================================
+// USERS TABLE
+// ============================================================================
 export const users = pgTable("users", {
   id: serial().primaryKey().notNull(),
   username: varchar({ length: 50 }).notNull(),
@@ -30,6 +52,9 @@ export const users = pgTable("users", {
   check("users_username_check", sql`(length((username)::text) > 3) AND ((username)::text ~ '^[a-zA-Z0-9_]+$'::text)`),
 ]);
 
+// ============================================================================
+// SUBSCRIPTION PLANS TABLE
+// ============================================================================
 export const subscriptionPlans = pgTable('subscription_plans', {
   id: serial().primaryKey().notNull(),
   planName: varchar('plan_name', { length: 100 }).notNull(),
@@ -43,15 +68,18 @@ export const subscriptionPlans = pgTable('subscription_plans', {
   unique("subscription_plans_plan_name_key").on(table.planName),
 ]);
 
+// ============================================================================
+// WORKSHOPS TABLE - FIXED
+// ============================================================================
 export const workshops = pgTable('workshops', {
   id: serial().primaryKey().notNull(),
-  ownerUserId: serial('owner_user_id').notNull(),
+  ownerUserId: integer('owner_user_id').notNull(), // ✅ Changed to integer
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
   address: varchar('address', { length: 255 }),
   phone: varchar('phone', { length: 20 }),
   commissionPercentage: decimal('commission_percentage', { precision: 5, scale: 2 }),
-  subscriptionPlanId: serial('subscription_plan_id'),
+  subscriptionPlanId: integer('subscription_plan_id'), // ✅ Changed to integer (optional)
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
@@ -59,17 +87,20 @@ export const workshops = pgTable('workshops', {
     columns: [table.ownerUserId],
     foreignColumns: [users.id],
     name: "workshops_owner_user_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ Owner delete = workshop delete
   foreignKey({
     columns: [table.subscriptionPlanId],
     foreignColumns: [subscriptionPlans.id],
     name: "workshops_subscription_plan_id_fk"
-  }).onDelete('restrict'),
+  }).onDelete('set null'), // ✅ Plan delete = subscriptionPlanId = NULL
 ]);
 
+// ============================================================================
+// SUBSCRIPTIONS TABLE - FIXED
+// ============================================================================
 export const subscriptions = pgTable('subscriptions', {
   id: serial().primaryKey().notNull(),
-  workshopId: serial('workshop_id').notNull(),
+  workshopId: integer('workshop_id').notNull(), // ✅ Changed to integer
   planType: varchar('plan_type', { length: 50 }).notNull(),
   status: varchar('status', { length: 50 }).default('active').notNull(),
   startDate: timestamp('start_date').defaultNow().notNull(),
@@ -84,13 +115,16 @@ export const subscriptions = pgTable('subscriptions', {
     columns: [table.workshopId],
     foreignColumns: [workshops.id],
     name: "subscriptions_workshop_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ Workshop delete = subscription delete
 ]);
 
+// ============================================================================
+// MAGAZINES TABLE - FIXED
+// ============================================================================
 export const magazines = pgTable('magazines', {
   id: serial().primaryKey().notNull(),
-  ownerUserId: serial('owner_user_id').notNull(),
-  workshopId: serial('workshop_id').notNull(),
+  ownerUserId: integer('owner_user_id').notNull(), // ✅ Changed to integer
+  workshopId: integer('workshop_id').notNull(), // ✅ Changed to integer
   shopName: varchar('shop_name', { length: 255 }).notNull(),
   address: varchar('address', { length: 255 }),
   phone: varchar('phone', { length: 20 }),
@@ -101,17 +135,20 @@ export const magazines = pgTable('magazines', {
     columns: [table.ownerUserId],
     foreignColumns: [users.id],
     name: "magazines_owner_user_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ Owner delete = magazine delete
   foreignKey({
     columns: [table.workshopId],
     foreignColumns: [workshops.id],
     name: "magazines_workshop_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ Workshop delete = magazine delete
 ]);
 
+// ============================================================================
+// REFERRAL LINKS TABLE - FIXED
+// ============================================================================
 export const referralLinks = pgTable('referral_links', {
   id: serial().primaryKey().notNull(),
-  workshopId: serial('workshop_id').notNull(),
+  workshopId: integer('workshop_id').notNull(), // ✅ Changed to integer
   token: varchar('token', { length: 255 }).notNull(),
   referralType: varchar('referral_type', { length: 50 }).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -124,13 +161,16 @@ export const referralLinks = pgTable('referral_links', {
     columns: [table.workshopId],
     foreignColumns: [workshops.id],
     name: "referral_links_workshop_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ Workshop delete = referral link delete
 ]);
 
+// ============================================================================
+// TAILORS TABLE - FIXED
+// ============================================================================
 export const tailors = pgTable('tailors', {
   id: serial().primaryKey().notNull(),
-  userId: serial('user_id').notNull(),
-  workshopId: serial('workshop_id').notNull(),
+  userId: integer('user_id').notNull(), // ✅ Changed to integer
+  workshopId: integer('workshop_id').notNull(), // ✅ Changed to integer
   fullName: varchar('full_name', { length: 255 }).notNull(),
   description: text('description'),
   skills: text('skills'),
@@ -142,18 +182,21 @@ export const tailors = pgTable('tailors', {
     columns: [table.userId],
     foreignColumns: [users.id],
     name: "tailors_user_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ User delete = tailor delete
   foreignKey({
     columns: [table.workshopId],
     foreignColumns: [workshops.id],
     name: "tailors_workshop_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ Workshop delete = tailor delete
 ]);
 
+// ============================================================================
+// VALIDATORS TABLE - FIXED
+// ============================================================================
 export const validators = pgTable('validators', {
   id: serial().primaryKey().notNull(),
-  userId: serial('user_id').notNull(),
-  workshopId: serial('workshop_id').notNull(),
+  userId: integer('user_id').notNull(), // ✅ Changed to integer
+  workshopId: integer('workshop_id').notNull(), // ✅ Changed to integer
   fullName: varchar('full_name', { length: 255 }).notNull(),
   description: text('description'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -163,19 +206,22 @@ export const validators = pgTable('validators', {
     columns: [table.userId],
     foreignColumns: [users.id],
     name: "validators_user_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ User delete = validator delete
   foreignKey({
     columns: [table.workshopId],
     foreignColumns: [workshops.id],
     name: "validators_workshop_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ Workshop delete = validator delete
 ]);
 
+// ============================================================================
+// ORDERS TABLE - FIXED
+// ============================================================================
 export const orders = pgTable('orders', {
   id: serial().primaryKey().notNull(),
-  magazineId: serial('magazine_id').notNull(),
-  workshopId: serial('workshop_id').notNull(),
-  validatorId: serial('validator_id').notNull(),
+  magazineId: integer('magazine_id').notNull(), // ✅ Changed to integer
+  workshopId: integer('workshop_id').notNull(), // ✅ Changed to integer
+  validatorId: integer('validator_id'), // ✅ Changed to integer (optional)
   orderNumber: varchar('order_number', { length: 100 }).notNull(),
   description: text('description'),
   estimatedCompletionDate: timestamp('estimated_completion_date'),
@@ -190,53 +236,60 @@ export const orders = pgTable('orders', {
     columns: [table.magazineId],
     foreignColumns: [magazines.id],
     name: "orders_magazine_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ Magazine delete = order delete
   foreignKey({
     columns: [table.workshopId],
     foreignColumns: [workshops.id],
     name: "orders_workshop_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ Workshop delete = order delete
   foreignKey({
     columns: [table.validatorId],
     foreignColumns: [validators.id],
     name: "orders_validator_id_fk"
-  }).onDelete('restrict'),
+  }).onDelete('set null'), // ✅ Validator delete = validatorId = NULL (optional)
 ]);
 
+// ============================================================================
+// ORDER ITEMS TABLE - FIXED
+// ============================================================================
 export const orderItems = pgTable('order_items', {
   id: serial().primaryKey().notNull(),
-  orderId: serial('order_id').notNull(),
-  tailorId: serial('tailor_id').notNull(),
+  orderId: integer('order_id').notNull(), // ✅ Changed to integer
+  tailorId: integer('tailor_id'), // ✅ Changed to integer (optional - not assigned yet)
+  description: text('description'),
   imageUrl: varchar('image_url', { length: 500 }),
   itemStatus: itemStatusEnum('item_status').default('PENDING').notNull(),
   completionDate: timestamp('completion_date'),
   estimatedHours: integer('estimated_hours'),
-  assignedByValidatorId: serial('assigned_by_validator_id').notNull(),
-  assignedAt: timestamp('assigned_at').defaultNow().notNull(),
+  assignedByValidatorId: integer('assigned_by_validator_id'), // ✅ Changed to integer (optional)
+  assignedAt: timestamp('assigned_at'),
 }, (table) => [
   foreignKey({
     columns: [table.orderId],
     foreignColumns: [orders.id],
     name: "order_items_order_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ Order delete = item delete
   foreignKey({
     columns: [table.tailorId],
     foreignColumns: [tailors.id],
     name: "order_items_tailor_id_fk"
-  }).onDelete('restrict'),
+  }).onDelete('set null'), // ✅ Tailor delete = tailorId = NULL
   foreignKey({
     columns: [table.assignedByValidatorId],
     foreignColumns: [validators.id],
     name: "order_items_assigned_by_validator_id_fk"
-  }).onDelete('restrict'),
+  }).onDelete('set null'), // ✅ Validator delete = validatorId = NULL
 ]);
 
+// ============================================================================
+// ORDER TRACKING TABLE - FIXED
+// ============================================================================
 export const orderTracking = pgTable('order_tracking', {
   id: serial().primaryKey().notNull(),
-  orderId: serial('order_id').notNull(),
+  orderId: integer('order_id').notNull(), // ✅ Changed to integer
   previousStatus: varchar('previous_status', { length: 100 }),
   newStatus: varchar('new_status', { length: 100 }).notNull(),
-  validatorId: serial('validator_id').notNull(),
+  validatorId: integer('validator_id'), // ✅ Changed to integer (optional)
   description: text('description'),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
 }, (table) => [
@@ -244,19 +297,22 @@ export const orderTracking = pgTable('order_tracking', {
     columns: [table.orderId],
     foreignColumns: [orders.id],
     name: "order_tracking_order_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ Order delete = tracking delete
   foreignKey({
     columns: [table.validatorId],
     foreignColumns: [validators.id],
     name: "order_tracking_validator_id_fk"
-  }).onDelete('restrict'),
+  }).onDelete('set null'), // ✅ Validator delete = validatorId = NULL
 ]);
 
+// ============================================================================
+// VALIDATOR ASSIGNMENT LOG TABLE - FIXED
+// ============================================================================
 export const validatorAssignmentLog = pgTable('validator_assignment_log', {
   id: serial().primaryKey().notNull(),
-  orderItemId: serial('order_item_id').notNull(),
-  validatorId: serial('validator_id').notNull(),
-  tailorId: serial('tailor_id').notNull(),
+  orderItemId: integer('order_item_id').notNull(), // ✅ Changed to integer
+  validatorId: integer('validator_id').notNull(), // ✅ Changed to integer
+  tailorId: integer('tailor_id').notNull(), // ✅ Changed to integer
   assignmentReason: text('assignment_reason'),
   assignedAt: timestamp('assigned_at').defaultNow().notNull(),
 }, (table) => [
@@ -264,20 +320,23 @@ export const validatorAssignmentLog = pgTable('validator_assignment_log', {
     columns: [table.orderItemId],
     foreignColumns: [orderItems.id],
     name: "validator_assignment_log_order_item_id_fk"
-  }).onDelete('cascade'),
+  }).onDelete('cascade'), // ✅ Item delete = log delete
   foreignKey({
     columns: [table.validatorId],
     foreignColumns: [validators.id],
     name: "validator_assignment_log_validator_id_fk"
-  }).onDelete('restrict'),
+  }).onDelete('cascade'), // ✅ Validator delete = log delete
   foreignKey({
     columns: [table.tailorId],
     foreignColumns: [tailors.id],
     name: "validator_assignment_log_tailor_id_fk"
-  }).onDelete('restrict'),
+  }).onDelete('cascade'), // ✅ Tailor delete = log delete
 ]);
 
-// Relations
+// ============================================================================
+// RELATIONS
+// ============================================================================
+
 export const usersRelations = relations(users, ({ one, many }) => ({
   workshop: one(workshops, {
     fields: [users.id],
@@ -311,6 +370,18 @@ export const workshopRelations = relations(workshops, ({ one, many }) => ({
   validators: many(validators),
   magazines: many(magazines),
   orders: many(orders),
+  subscriptions: many(subscriptions),
+}));
+
+export const subscriptionPlanRelations = relations(subscriptionPlans, ({ many }) => ({
+  workshops: many(workshops),
+}));
+
+export const subscriptionRelations = relations(subscriptions, ({ one }) => ({
+  workshop: one(workshops, {
+    fields: [subscriptions.workshopId],
+    references: [workshops.id],
+  }),
 }));
 
 export const magazineRelations = relations(magazines, ({ one, many }) => ({
@@ -418,14 +489,3 @@ export const validatorAssignmentLogRelations = relations(validatorAssignmentLog,
     references: [tailors.id],
   }),
 }));
-
-export const subscriptionPlanRelations = relations(subscriptionPlans, ({ many }) => ({
-  workshops: many(workshops),
-}));
-export const subscriptionRelations = relations(subscriptions, ({ one }) => ({
-  workshop: one(workshops, {
-    fields: [subscriptions.workshopId],
-    references: [workshops.id],
-  }),
-}));
-
