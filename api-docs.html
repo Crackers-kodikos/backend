@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop Tailor Management API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .main-content {
+            padding: 40px;
+        }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 20px;
+        }
+        .tab {
+            padding: 12px 20px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+        .tab:hover {
+            background: #e0e0e0;
+        }
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .endpoint {
+            background: #fafafa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        .endpoint:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .method {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.85em;
+            color: white;
+        }
+        .method.get {
+            background: #61affe;
+        }
+        .method.post {
+            background: #49cc90;
+        }
+        .method.put {
+            background: #fca130;
+        }
+        .method.delete {
+            background: #f93e3e;
+        }
+        .path {
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            flex: 1;
+            min-width: 300px;
+            border: 1px solid #ddd;
+        }
+        .auth-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #ffe0b2;
+            border-radius: 3px;
+            font-size: 0.85em;
+            color: #d84315;
+            font-weight: 600;
+        }
+        .endpoint-body {
+            margin-top: 15px;
+        }
+        .endpoint-section {
+            margin-bottom: 12px;
+        }
+        .endpoint-section-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .endpoint-summary {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin: 10px 0;
+        }
+        .response {
+            background: #e8f5e9;
+            padding: 12px;
+            border-radius: 3px;
+            border-left: 4px solid #4caf50;
+            margin: 10px 0;
+        }
+        .error {
+            background: #ffebee;
+            padding: 12px;
+            border-radius: 3px;
+            border-left: 4px solid #f44336;
+            margin: 10px 0;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .pagination button {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .pagination button:hover {
+            background: #f5f5f5;
+        }
+        .pagination button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .search-box {
+            margin-bottom: 20px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1em;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: border 0.3s ease;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            .endpoint-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .path {
+                min-width: 100%;
+            }
+            .tabs {
+                flex-direction: column;
+            }
+            .tab {
+                width: 100%;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎭 Workshop Tailor Management API</h1>
+            <p>Complete API Documentation for B2B Tailoring Order Management System</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Statistics -->
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number">82</div>
+                    <div class="stat-label">Total Endpoints</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">10</div>
+                    <div class="stat-label">API Modules</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Documentation</div>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <strong>📌 Base URL:</strong> <code>https://api.workshop-tailor.com/api</code><br>
+                <strong>🔐 Authentication:</strong> Bearer Token (JWT)<br>
+                <strong>📄 Content-Type:</strong> application/json
+            </div>
+
+            <!-- Search -->
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Search endpoints by method, path, or summary...">
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs" id="tabContainer">
+                <!-- Tabs will be inserted here by JavaScript -->
+            </div>
+
+            <!-- Tab Contents -->
+            <div id="tabContents">
+                <!-- Contents will be inserted here by JavaScript -->
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="paginationContainer">
+                <!-- Pagination will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiData = {
+            "Auth": [
+                {"method": "POST", "path": "/api/auth/register/workshop", "summary": "Register a new workshop owner", "auth": false, "body": {"username": "string", "password": "string", "email": "string", "firstname": "string", "lastname": "string", "workshopName": "string"}, "response": "201 - Workshop created with tokens"},
+                {"method": "POST", "path": "/api/auth/register/user", "summary": "Register user with referral", "auth": false, "body": {"username": "string", "password": "string", "email": "string", "userType": "MAGAZINE_OWNER|TAILOR|VALIDATOR", "referralCode": "string"}, "response": "201 - User created"},
+                {"method": "POST", "path": "/api/auth/login", "summary": "User login", "auth": false, "body": {"username": "string", "password": "string"}, "response": "200 - Tokens"},
+                {"method": "GET", "path": "/api/auth/profile", "summary": "Get user profile", "auth": true, "response": "200 - Profile data"},
+                {"method": "PUT", "path": "/api/auth/profile", "summary": "Update user profile", "auth": true, "response": "200 - Updated profile"},
+                {"method": "POST", "path": "/api/auth/logout", "summary": "Logout user", "auth": true, "response": "200 - Logout successful"},
+                {"method": "GET", "path": "/api/auth/check", "summary": "Check authentication", "auth": true, "response": "200 - Authenticated"}
+            ],
+            "Magazine": [
+                {"method": "GET", "path": "/api/magazine/profile", "summary": "Get magazine profile", "auth": true, "response": "200 - Profile with workshop"},
+                {"method": "PUT", "path": "/api/magazine/profile", "summary": "Update magazine profile", "auth": true, "response": "200 - Updated"},
+                {"method": "GET", "path": "/api/magazine/dashboard", "summary": "Get dashboard with stats", "auth": true, "response": "200 - Dashboard data"},
+                {"method": "GET", "path": "/api/magazine/workshops", "summary": "Get available workshops", "auth": true, "response": "200 - List"},
+                {"method": "POST", "path": "/api/magazine/orders", "summary": "Create new order", "auth": true, "response": "201 - Order created"},
+                {"method": "GET", "path": "/api/magazine/orders", "summary": "Get all orders", "auth": true, "response": "200 - Orders list"},
+                {"method": "GET", "path": "/api/magazine/orders/{orderId}", "summary": "Get order details", "auth": true, "response": "200 - Order data"},
+                {"method": "PUT", "path": "/api/magazine/orders/{orderId}", "summary": "Update order", "auth": true, "response": "200 - Updated"},
+                {"method": "DELETE", "path": "/api/magazine/orders/{orderId}", "summary": "Cancel order", "auth": true, "response": "200 - Cancelled"}
+            ],
+            "Workshop": [
+                {"method": "GET", "path": "/api/workshop/profile", "summary": "Get workshop profile", "auth": true, "response": "200 - Profile"},
+                {"method": "PUT", "path": "/api/workshop/profile", "summary": "Update workshop", "auth": true, "response": "200 - Updated"},
+                {"method": "GET", "path": "/api/workshop/dashboard", "summary": "Get dashboard", "auth": true, "response": "200 - Dashboard"},
+                {"method": "GET", "path": "/api/workshop/tailors", "summary": "Get all tailors", "auth": true, "response": "200 - Tailors list"},
+                {"method": "GET", "path": "/api/workshop/tailors/{tailorId}", "summary": "Get tailor details", "auth": true, "response": "200 - Tailor info"},
+                {"method": "PUT", "path": "/api/workshop/tailors/{tailorId}", "summary": "Update tailor", "auth": true, "response": "200 - Updated"},
+                {"method": "GET", "path": "/api/workshop/validators", "summary": "Get validators", "auth": true, "response": "200 - Validators"},
+                {"method": "GET", "path": "/api/workshop/magazines", "summary": "Get connected magazines", "auth": true, "response": "200 - Magazines"},
+                {"method": "GET", "path": "/api/workshop/statistics", "summary": "Get statistics", "auth": true, "response": "200 - Stats"}
+            ],
+            "Orders": [
+                {"method": "GET", "path": "/api/orders/workshop", "summary": "Get workshop orders", "auth": true, "response": "200 - Orders"},
+                {"method": "GET", "path": "/api/orders/{orderId}", "summary": "Get order details", "auth": true, "response": "200 - Full order"},
+                {"method": "POST", "path": "/api/orders/{orderId}/validate", "summary": "Validate order", "auth": true, "response": "200 - Validated"},
+                {"method": "POST", "path": "/api/orders/{orderId}/reject", "summary": "Reject order", "auth": true, "response": "200 - Rejected"},
+                {"method": "PUT", "path": "/api/orders/{orderId}/status", "summary": "Update status", "auth": true, "response": "200 - Updated"},
+                {"method": "GET", "path": "/api/orders/statistics/overview", "summary": "Get statistics", "auth": true, "response": "200 - Stats"},
+                {"method": "GET", "path": "/api/orders/{orderId}/timeline", "summary": "Get timeline", "auth": true, "response": "200 - Timeline"}
+            ],
+            "Order Items": [
+                {"method": "GET", "path": "/api/order-items", "summary": "Get all items", "auth": true, "response": "200 - Items"},
+                {"method": "GET", "path": "/api/order-items/{itemId}", "summary": "Get item details", "auth": true, "response": "200 - Item data"},
+                {"method": "GET", "path": "/api/order-items/order/{orderId}", "summary": "Get order items", "auth": true, "response": "200 - Items list"},
+                {"method": "GET", "path": "/api/order-items/tailor/{tailorId}", "summary": "Get tailor items", "auth": true, "response": "200 - Items"},
+                {"method": "PUT", "path": "/api/order-items/{itemId}/status", "summary": "Update item status", "auth": true, "response": "200 - Updated"},
+                {"method": "PUT", "path": "/api/order-items/batch/status", "summary": "Batch update", "auth": true, "response": "200 - Updated"},
+                {"method": "GET", "path": "/api/order-items/{itemId}/assignment", "summary": "Get assignment", "auth": true, "response": "200 - Assignment data"},
+                {"method": "GET", "path": "/api/order-items/statistics/global", "summary": "Get statistics", "auth": true, "response": "200 - Stats"}
+            ],
+            "Tailor": [
+                {"method": "GET", "path": "/api/tailor/profile", "summary": "Get profile", "auth": true, "response": "200 - Profile"},
+                {"method": "PUT", "path": "/api/tailor/profile", "summary": "Update profile", "auth": true, "response": "200 - Updated"},
+                {"method": "GET", "path": "/api/tailor/dashboard", "summary": "Get dashboard", "auth": true, "response": "200 - Dashboard"},
+                {"method": "GET", "path": "/api/tailor/tasks", "summary": "Get tasks", "auth": true, "response": "200 - Tasks list"},
+                {"method": "GET", "path": "/api/tailor/tasks/{itemId}", "summary": "Get task details", "auth": true, "response": "200 - Task data"},
+                {"method": "PUT", "path": "/api/tailor/tasks/{itemId}/status", "summary": "Update task", "auth": true, "response": "200 - Updated"},
+                {"method": "GET", "path": "/api/tailor/statistics", "summary": "Get stats", "auth": true, "response": "200 - Statistics"}
+            ],
+            "Validator": [
+                {"method": "GET", "path": "/api/validator/profile", "summary": "Get profile", "auth": true, "response": "200 - Profile"},
+                {"method": "PUT", "path": "/api/validator/profile", "summary": "Update profile", "auth": true, "response": "200 - Updated"},
+                {"method": "GET", "path": "/api/validator/dashboard", "summary": "Get dashboard", "auth": true, "response": "200 - Dashboard"},
+                {"method": "GET", "path": "/api/validator/tailors", "summary": "Get tailors", "auth": true, "response": "200 - Tailors"},
+                {"method": "POST", "path": "/api/validator/items/{itemId}/assign", "summary": "Assign item", "auth": true, "response": "200 - Assigned"},
+                {"method": "GET", "path": "/api/validator/assignments", "summary": "Get assignments", "auth": true, "response": "200 - List"},
+                {"method": "POST", "path": "/api/validator/items/{itemId}/review", "summary": "Review item", "auth": true, "response": "200 - Reviewed"},
+                {"method": "GET", "path": "/api/validator/statistics", "summary": "Get stats", "auth": true, "response": "200 - Statistics"}
+            ],
+            "Tracking": [
+                {"method": "GET", "path": "/api/tracking/order/{orderId}", "summary": "Get tracking history", "auth": true, "response": "200 - History"},
+                {"method": "GET", "path": "/api/tracking/magazine/orders", "summary": "Get magazine tracking", "auth": true, "response": "200 - Tracking data"},
+                {"method": "GET", "path": "/api/tracking/magazine/dashboard", "summary": "Get dashboard", "auth": true, "response": "200 - Dashboard"},
+                {"method": "GET", "path": "/api/tracking/events/recent", "summary": "Get recent events", "auth": true, "response": "200 - Events"},
+                {"method": "GET", "path": "/api/tracking/statistics/status", "summary": "Get statistics", "auth": true, "response": "200 - Stats"},
+                {"method": "GET", "path": "/api/tracking/report/{orderId}", "summary": "Get report", "auth": true, "response": "200 - Report"}
+            ],
+            "Referral": [
+                {"method": "POST", "path": "/api/referral/magazine", "summary": "Create magazine link", "auth": true, "response": "201 - Link created"},
+                {"method": "POST", "path": "/api/referral/tailor", "summary": "Create tailor link", "auth": true, "response": "201 - Link created"},
+                {"method": "POST", "path": "/api/referral/validator", "summary": "Create validator link", "auth": true, "response": "201 - Link created"},
+                {"method": "POST", "path": "/api/referral/bulk", "summary": "Create bulk links", "auth": true, "response": "201 - Links created"},
+                {"method": "GET", "path": "/api/referral/all", "summary": "Get all links", "auth": true, "response": "200 - Links list"},
+                {"method": "POST", "path": "/api/referral/{linkId}/deactivate", "summary": "Deactivate link", "auth": true, "response": "200 - Deactivated"},
+                {"method": "POST", "path": "/api/referral/{linkId}/reactivate", "summary": "Reactivate link", "auth": true, "response": "200 - Reactivated"}
+            ],
+            "Subscriptions": [
+                {"method": "GET", "path": "/api/subscriptions/plans", "summary": "Get plans", "auth": false, "response": "200 - Plans list"},
+                {"method": "GET", "path": "/api/subscriptions/plans/{planId}", "summary": "Get plan details", "auth": false, "response": "200 - Plan data"},
+                {"method": "POST", "path": "/api/subscriptions/subscribe", "summary": "Subscribe to plan", "auth": true, "response": "201 - Subscription"},
+                {"method": "GET", "path": "/api/subscriptions/current", "summary": "Get active subscription", "auth": true, "response": "200 - Subscription"},
+                {"method": "POST", "path": "/api/subscriptions/cancel", "summary": "Cancel subscription", "auth": true, "response": "200 - Cancelled"},
+                {"method": "POST", "path": "/api/subscriptions/upgrade", "summary": "Upgrade plan", "auth": true, "response": "200 - Upgraded"},
+                {"method": "GET", "path": "/api/subscriptions/history", "summary": "Get history", "auth": true, "response": "200 - History"},
+                {"method": "GET", "path": "/api/subscriptions/billing", "summary": "Get billing", "auth": true, "response": "200 - Billing info"}
+            ]
+        };
+
+        const modules = Object.keys(apiData);
+        let currentModule = modules[0];
+        let itemsPerPage = 5;
+        let currentPage = 1;
+
+        // Create tabs
+        function createTabs() {
+            const tabContainer = document.getElementById('tabContainer');
+            modules.forEach((module, index) => {
+                const button = document.createElement('button');
+                button.className = 'tab' + (index === 0 ? ' active' : '');
+                button.textContent = module;
+                button.onclick = () => switchTab(module);
+                tabContainer.appendChild(button);
+            });
+        }
+
+        // Switch tab
+        function switchTab(module) {
+            currentModule = module;
+            currentPage = 1;
+            
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            renderEndpoints();
+        }
+
+        // Render endpoints
+        function renderEndpoints() {
+            const endpoints = apiData[currentModule];
+            const tabContents = document.getElementById('tabContents');
+            tabContents.innerHTML = '';
+            
+            const totalPages = Math.ceil(endpoints.length / itemsPerPage);
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageEndpoints = endpoints.slice(start, end);
+            
+            pageEndpoints.forEach(endpoint => {
+                const methodClass = endpoint.method.toLowerCase();
+                const authBadge = endpoint.auth ? '<span class="auth-badge">🔐 Auth Required</span>' : '';
+                
+                const html = `
+                    <div class="endpoint">
+                        <div class="endpoint-header">
+                            <span class="method ${methodClass}">${endpoint.method}</span>
+                            <span class="path">${endpoint.path}</span>
+                            ${authBadge}
+                        </div>
+                        <div class="endpoint-body">
+                            <div class="endpoint-section">
+                                <div class="endpoint-summary">${endpoint.summary}</div>
+                            </div>
+                            <div class="response">${endpoint.response}</div>
+                        </div>
+                    </div>
+                `;
+                
+                tabContents.innerHTML += html;
+            });
+            
+            // Update pagination
+            updatePagination(totalPages);
+        }
+
+        // Update pagination
+        function updatePagination(totalPages) {
+            const paginationContainer = document.getElementById('paginationContainer');
+            paginationContainer.innerHTML = '';
+            
+            const prevButton = document.createElement('button');
+            prevButton.textContent = '← Previous';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderEndpoints();
+                }
+            };
+            paginationContainer.appendChild(prevButton);
+            
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.className = i === currentPage ? 'active' : '';
+                pageButton.onclick = () => {
+                    currentPage = i;
+                    renderEndpoints();
+                };
+                paginationContainer.appendChild(pageButton);
+            }
+            
+            const nextButton = document.createElement('button');
+            nextButton.textContent = 'Next →';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderEndpoints();
+                }
+            };
+            paginationContainer.appendChild(nextButton);
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const tabContents = document.getElementById('tabContents');
+            const endpoints = tabContents.querySelectorAll('.endpoint');
+            
+            endpoints.forEach(endpoint => {
+                const text = endpoint.textContent.toLowerCase();
+                endpoint.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        });
+
+        // Initialize
+        createTabs();
+        renderEndpoints();
+    </script>
+</body>
+</html>
