@@ -1,4 +1,4 @@
-import { magazines, users, workshops, orders, orderItems } from '../db/schemas/schema.js';
+import { magazines, users, workshops, orders, orderItems, validators } from '../db/schemas/schema.js';
 import { eq, and, count } from 'drizzle-orm';
 import db from "../db/index.js";
 import { config } from "../config/env.js";

@@ -703,12 +703,11 @@ docker-compose up
 
 ## 📚 Related Documents
 
-- **API_DOCUMENTATION.md** - Complete endpoint reference
+- **api-docs.html** - Complete endpoint reference
 - **postman_collection.json** - Ready-to-use API tests
-- **openapi_spec.json** - Machine-readable API spec
 
 ---
 
-**Created:** November 15, 2025  
+
 **Version:** 1.0.0  
 **Ready to deploy!** 🚀

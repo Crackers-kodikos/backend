@@ -1,0 +1,1040 @@
+{
+  "info": {
+    "name": "Kodikos - Workshop Tailoring API",
+    "description": "Complete collection for testing the Kodikos ecommerce platform API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register Workshop Owner",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"workshop_owner\",\n  \"password\": \"SecurePass123\",\n  \"email\": \"owner@workshop.com\",\n  \"firstname\": \"Ahmed\",\n  \"lastname\": \"Mohamed\",\n  \"phone\": \"+213600000001\",\n  \"workshopName\": \"Master Tailoring\",\n  \"workshopDescription\": \"Professional tailoring services\",\n  \"workshopAddress\": \"123 Main St\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register/workshop",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "auth",
+                "register",
+                "workshop"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register User with Referral",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"tailor_user\",\n  \"password\": \"TailorPass123\",\n  \"email\": \"tailor@workshop.com\",\n  \"firstname\": \"Zainab\",\n  \"lastname\": \"Hassan\",\n  \"phone\": \"+213600000002\",\n  \"userType\": \"TAILOR\",\n  \"referralCode\": \"{{referral_code}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register/referral",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "auth",
+                "register",
+                "referral"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"workshop_owner\",\n  \"password\": \"SecurePass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Get All Plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/subscriptions/plans",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "subscriptions",
+                "plans"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Plan Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/subscriptions/plans/1",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "subscriptions",
+                "plans",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Subscribe to Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planId\": 2,\n  \"paymentMethodToken\": \"tok_visa\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscriptions/subscribe",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "subscriptions",
+                "subscribe"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Current Subscription",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscriptions/current",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "subscriptions",
+                "current"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upgrade Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPlanId\": 3,\n  \"paymentMethodToken\": \"tok_visa\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/subscriptions/upgrade",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "subscriptions",
+                "upgrade"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/subscriptions/cancel",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "subscriptions",
+                "cancel"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workshop",
+      "item": [
+        {
+          "name": "Get Workshop Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/workshop/profile",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "workshop",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Workshop Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Master Tailoring Workshop Updated\",\n  \"description\": \"Premium tailoring services\",\n  \"address\": \"456 New Street\",\n  \"phone\": \"+213600000999\",\n  \"commissionPercentage\": 15.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/workshop/profile",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "workshop",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Workshop Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/workshop/dashboard",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "workshop",
+                "dashboard"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Get Workshop Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders?status=PENDING",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING"
+                },
+                {
+                  "key": "magazineId",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Order with Items",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/orders/1",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "orders",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Validate Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Order looks good, proceeding to tailoring\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders/1/validate",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "orders",
+                "1",
+                "validate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rejectionReason\": \"Measurements are incorrect\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders/1/reject",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "orders",
+                "1",
+                "reject"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newStatus\": \"TAILORING\",\n  \"notes\": \"Started tailoring work\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders/1/status",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "orders",
+                "1",
+                "status"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Magazine",
+      "item": [
+        {
+          "name": "Get Magazine Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/magazine/profile",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "magazine",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Magazine Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shopName\": \"Fashion Boutique Premium\",\n  \"address\": \"789 Downtown Algiers\",\n  \"phone\": \"+213600000555\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/magazine/profile",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "magazine",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Magazine Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/magazine/dashboard",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "magazine",
+                "dashboard"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Magazine Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/magazine/orders?status=COMPLETED",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "magazine",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "COMPLETED"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"5 elegant evening dresses with embroidery and beading\",\n  \"estimatedCompletionDate\": \"2025-11-28T00:00:00Z\",\n  \"totalPrice\": \"500.00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/magazine/create-order",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "magazine",
+                "create-order"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tailor",
+      "item": [
+        {
+          "name": "Get Tailor Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tailor/profile",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "tailor",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Tailor Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Zainab Hassan Ali\",\n  \"description\": \"Expert embroidery and hand stitching specialist\",\n  \"skills\": \"Embroidery, Hand Stitching, Beading, Silk Work\",\n  \"availabilityStatus\": \"available\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tailor/profile",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "tailor",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tailor Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tailor/dashboard",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "tailor",
+                "dashboard"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Assigned Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tailor/tasks?status=IN_PROGRESS",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "tailor",
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "IN_PROGRESS"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Task Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tailor/tasks/1",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "tailor",
+                "tasks",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Task Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newStatus\": \"IN_PROGRESS\",\n  \"notes\": \"Started work on the item\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tailor/tasks/1/status",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "tailor",
+                "tasks",
+                "1",
+                "status"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Validator",
+      "item": [
+        {
+          "name": "Get Validator Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/validator/profile",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "validator",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Validator Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Ibrahim Hassan Ahmed\",\n  \"description\": \"Quality control manager with 15 years experience in tailoring\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/validator/profile",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "validator",
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Validator Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/validator/dashboard",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "validator",
+                "dashboard"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Referral",
+      "item": [
+        {
+          "name": "Generate Magazine Referral Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expiresInDays\": 30\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/referral/generate/magazine",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "referral",
+                "generate",
+                "magazine"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Tailor Referral Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expiresInDays\": 30\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/referral/generate/tailor",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "referral",
+                "generate",
+                "tailor"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Validator Referral Link",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expiresInDays\": 30\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/referral/generate/validator",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "referral",
+                "generate",
+                "validator"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Referral Links",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/referral/all?type=MAGAZINE&isActive=true",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "referral",
+                "all"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "MAGAZINE"
+                },
+                {
+                  "key": "isActive",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tracking",
+      "item": [
+        {
+          "name": "Get Order Tracking History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tracking/order/1",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "tracking",
+                "order",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Magazine Orders Tracking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tracking/magazine?status=TAILORING",
+              "protocol": "http",
+              "host": [
+                "{{base_url}}",
+                "api",
+                "tracking",
+                "magazine"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "TAILORING"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3232",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "referral_code",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

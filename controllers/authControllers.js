@@ -12,12 +12,40 @@ export const registerWorkshopOwner = async (req, res) => {
     const { username, password, email, firstname, lastname, phone, workshopName, workshopDescription, workshopAddress } = req.body;
 
     // Validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const usernameRegex = /^[a-zA-Z0-9_]{3,}$/;
+
     if (!username || !password || !email || !firstname || !lastname || !workshopName) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields: username, password, email, firstname, lastname, workshopName"
       });
     }
+
+    // Validate email format
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format. Must be a valid email address"
+      });
+    }
+
+    // Validate username format
+    if (!usernameRegex.test(username)) {
+      return res.status(400).json({
+        success: false,
+        message: "Username must be 3+ characters, containing only letters, numbers, and underscores"
+      });
+    }
+
+    // Validate password length
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters long"
+      });
+    }
+
 
     // Start transaction
     const result = await db.transaction(async (tx) => {
