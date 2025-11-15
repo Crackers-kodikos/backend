@@ -701,30 +701,6 @@ docker-compose up
 
 ---
 
-## 🎓 Learning Path
-
-**Day 1:**
-- Read this document
-- Run Docker setup
-- Test login
-
-**Day 2:**
-- Try different API endpoints using Postman
-- Create an order as boutique shop
-- Validate order as quality checker
-
-**Day 3:**
-- Understand status workflow
-- Try assigning tasks
-- Understand role differences
-
-**Day 4+:**
-- Read full API documentation
-- Start building frontend
-- Integrate API endpoints
-
----
-
 ## 📚 Related Documents
 
 - **API_DOCUMENTATION.md** - Complete endpoint reference
