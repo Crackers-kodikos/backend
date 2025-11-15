@@ -485,24 +485,13 @@ cd back-end
 Create a file named `.env` in the project folder:
 
 ```env
-# Server Port
 PORT=3232
-
-# Database Connection (exact format matters!)
-DATABASE_URL="postgresql://postgres:password@db:5432/kodikosdb"
-
-# Authentication
-JWT_SECRET="this-is-your-super-secret-key-make-it-long-and-random-min-32-chars"
-JWT_EXPIRES_IN="7d"
-BCRYPT_SALT_ROUNDS=10
-
-# Frontend URLs (for CORS - allows frontend to talk to API)
-ALLOWED_ORIGINS="http://localhost:3000,http://localhost:5173"
-
-# Development Mode
-NODE_ENV="development"
-SECURE=false
-```
+DATABASE_URL="postgresql://postgres:password@localhost:5433/kodikosdb"
+BCRYPT_SALT_ROUNDS=5
+JWT_SECRET="your-secret-key"
+JWT_EXPIRES_IN="30d"
+ALLOWED_ORIGINS="http://localhost:8081"
+SECURE=false```
 
 **Note:** The `DATABASE_URL` format is important. `db` is the Docker container name (not localhost).
 
@@ -517,6 +506,11 @@ SECURE=false
 # 3. Runs database setup
 # 4. Seeds sample data
 npm run docker:compose
+
+# AFTER THAT CHECK DOCKER LOG FILES TO WAIT FOR SERVER TO START
+# YOU WILL SEE 
+ server started on port 3232
+ Swagger docs available at http://localhost:3232/docs
 
 # ALTERNATIVE
 docker compose up -d
